@@ -1,3 +1,6 @@
+from datetime import datetime
+from pathlib import Path
+
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     TimeoutException,
@@ -14,7 +17,7 @@ class Mail126Page(BasePage):
     """126 邮箱登录页
 
     126/163 邮箱登录页改版过程中出现过两种形态：
-    1. 旧版：表单在 iframe 里（#loginIframe / #x-URS-iframe）；
+    1. 旧版：表单在 iframe 里（#loginIframe / #x-URS-iframe);
     2. 新版：表单直接渲染在主文档。
     所以账号/密码/按钮都用"候选定位器"依次尝试，不写死单一选择器。
     """
@@ -58,6 +61,15 @@ class Mail126Page(BasePage):
     # 登录成功后邮箱主页左侧的收件箱入口
     INBOX_ENTRY = (By.XPATH, "//*[normalize-space(text())='收件箱']")
 
+    # 安全手机确认页的特征文本（新设备/新环境登录时出现）
+    SECURITY_CONFIRM_TEXT = (By.XPATH, "//*[contains(text(),'当前安全手机')]")
+
+    # 安全手机确认页上的「登录」按钮
+    SECURITY_LOGIN_BUTTON_CANDIDATES = (
+        (By.XPATH, "//button[normalize-space(.)='登录']"),
+        (By.XPATH, "//*[self::button or self::a][contains(normalize-space(.),'登录')]"),
+    )
+
     # ========== 内部工具方法 ==========
     def _switch_into_login_frame(self):
         """登录框在 iframe 内则切进去，否则停留在主文档"""
@@ -71,7 +83,7 @@ class Mail126Page(BasePage):
                 return True
             except TimeoutException:
                 self.driver.switch_to.default_content()
-        self.logger.info("未发现登录 iframe，按主文档处理")
+        self.logger.info("未发现登录 iframe,按主文档处理")
         return False
 
     def _find_first(self, candidates, desc, per_try_timeout=4):
@@ -119,6 +131,21 @@ class Mail126Page(BasePage):
             return True
         return False
 
+    def _confirm_security_page_if_present(self):
+        """点击登录后可能出现「安全手机确认」页（新设备验证），需再点一次「登录」
+
+        确认页与登录表单在同一个 iframe 内，无需切换上下文。
+        """
+        try:
+            WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located(self.SECURITY_CONFIRM_TEXT)
+            )
+        except TimeoutException:
+            return False
+        self.logger.info("🔐 检测到安全手机确认页，点击「登录」继续")
+        self._click_first(self.SECURITY_LOGIN_BUTTON_CANDIDATES, "安全确认页登录按钮")
+        return True
+
     # ========== 业务操作方法 ==========
     def open_login_page(self, url=None):
         """打开 126 邮箱登录页，并进入登录框所在上下文"""
@@ -142,6 +169,7 @@ class Mail126Page(BasePage):
         self.logger.info("⌨️ 输入126邮箱密码:******")
 
         self._click_first(self.LOGIN_BUTTON_CANDIDATES, "登录按钮")
+        self._confirm_security_page_if_present()
         return self
 
     def is_logged_in(self, timeout=None):
@@ -152,8 +180,19 @@ class Mail126Page(BasePage):
             self.logger.info("✅已进入126邮箱主页")
             return True
         except TimeoutException:
-            self.logger.error(f"❌ {wait_time}秒内未进入邮箱主页，当前URL:{self.driver.current_url}")
+            self.logger.error(f"❌ {wait_time}秒内未进入邮箱主页,当前URL:{self.driver.current_url}")
+            self._save_debug_screenshot("mail126_login_fail")
             return False
+
+    def _save_debug_screenshot(self, prefix):
+        """登录失败时保留现场截图，便于排查（滑块验证/错误提示/默认二维码页）"""
+        try:
+            Path("screenshots").mkdir(exist_ok=True)
+            path = Path("screenshots") / f"{prefix}_{datetime.now():%y%m%d_%H%M%S}.png"
+            self.driver.save_screenshot(str(path))
+            self.logger.info(f"📸 已保存登录失败现场截图:{path}")
+        except Exception as e:
+            self.logger.error(f"现场截图保存失败:{e}")
 
     @staticmethod
     def _has_entered_inbox(driver):
