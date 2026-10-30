@@ -1,0 +1,31 @@
+# GitHub Actions 工作流：推送代码后自动运行接口测试
+# 说明：Selenium UI 用例依赖内网 UAT 环境，云端 runner 访问不到，
+#       所以 CI 里只跑不依赖内网的接口用例（test_practice.py）
+name: API Tests
+
+# ========== 触发时机 ==========
+on:
+  push:
+    branches: [main]        # 推送到 main 分支时触发
+  workflow_dispatch:        # 允许在 GitHub 网页上手动点击触发
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取仓库代码
+      - uses: actions/checkout@v4
+
+      # 2. 安装 Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      # 3. 安装依赖（接口用例只需要 requests 和 pytest）
+      - name: Install dependencies
+        run: pip install requests pytest
+
+      # 4. 运行接口测试用例
+      - name: Run API tests
+        run: pytest testcase/test_practice.py -v

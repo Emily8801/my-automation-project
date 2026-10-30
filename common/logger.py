@@ -1,6 +1,7 @@
 import logging
 import sys
 from datetime import datetime
+from pathlib import Path
 
 def get_logger(name = "LoginTest"):
     logger = logging.getLogger(name)
@@ -13,7 +14,8 @@ def get_logger(name = "LoginTest"):
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
 
-    # 文件输出（按天分割）
+    # 文件输出（按天分割）；CI 全新检出时 logs/ 不存在，先创建
+    Path("logs").mkdir(exist_ok=True)
     log_file = f"logs/test_{datetime.now().strftime('%y%m%d')}.log"
     file_handler = logging.FileHandler(log_file,encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
