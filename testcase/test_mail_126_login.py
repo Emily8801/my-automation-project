@@ -1,3 +1,4 @@
+import time
 import unittest
 
 from common.driver_factory import get_driver
@@ -20,12 +21,14 @@ class TestMail126Login(unittest.TestCase):
     def test_login_success(self):
         """测试登录成功并进入邮箱主页"""
         (self.mail_page
-         .open_login_page()
-         .login(MAIL_USER, MAIL_PASS))
+        .open_login_page()
+        .login(MAIL_USER, MAIL_PASS))
         self.assertTrue(
             self.mail_page.is_logged_in(timeout=20),
             "126 邮箱登录失败：未进入邮箱主页"
         )
+        # 登录成功进入主页后停留 10 秒，便于人工观察（tearDown 才会关闭浏览器）
+        time.sleep(10)
 
 
 if __name__ == "__main__":

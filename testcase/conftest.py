@@ -13,6 +13,11 @@ from common.logger import get_logger
 
 # 统一锚定项目根目录，避免从不同工作目录启动时路径漂移
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# 让 QQ_MAIL_* 等邮件配置也能从 .env 读取（config/settings 之外的配置入口）
+from dotenv import load_dotenv
+load_dotenv(PROJECT_ROOT / ".env")
+
 REPORT_PATH = PROJECT_ROOT / "report" / "report.html"
 SCREENSHOT_DIR = PROJECT_ROOT / "screenshots"
 
