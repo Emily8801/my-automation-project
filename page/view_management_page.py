@@ -1,6 +1,5 @@
 from selenium.webdriver.common.by import By
 from page.base_page import BasePage
-from selenium.common.exceptions import TimeoutException
 
 class ViewManagementPage(BasePage):
     """视图管理页面对象"""
@@ -18,18 +17,13 @@ class ViewManagementPage(BasePage):
         return self
 
     # ========== ✅ 新增：验证方法 ==========
-    def is_ddp_list_loaded(self,timeout=10):
+    def is_ddp_list_loaded(self, timeout=10):
         """
         验证DDP视图列表是否成功加载
         :param timeout: 最大等待时间(秒)
-        :return: bool
+        :return: bool 列表可见返回 True,超时返回 False
         """
-        try:
-        # 使用BasePage封装的显式等待，而非time.sleep
-            self.wait_for_element_visible(self.DDP_LIST_CONTAINER,timeout=timeout)
-            return True
-        except TimeoutException:
-            return False
+        return self.is_element_visible(self.DDP_LIST_CONTAINER, timeout=timeout)
 
     def get_ddp_list_row_count(self):
         """获取DDP列表的数据行数"""

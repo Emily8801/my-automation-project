@@ -15,11 +15,11 @@ class TestSearchDDP(LoginBase):
 
         # ✅ 关键：每条用例执行前确保在 DDP 页面
         self.view_page.enter_ddp_view_list()
-        self.assertTrue(self.view_page.is_ddp_list_loaded(), "DDP页面加载失败，终止测试")
+        self.assertTrue(self.view_page.is_ddp_list_loaded(), "DDP页面加载失败,终止测试")
 
 
     def test_search_ddp_views(self):
-        """数据驱动：批量验证DDP搜索功能"""
+        """数据驱动:批量验证DDP搜索功能"""
         for case in DDP_SEARCH_CASES:
             # 🔴 修复：原代码断言里引用 case['desc']，但 ddp_test_data.py 中没有 desc 字段，
             #    会直接 KeyError；这里用 .get 兜底

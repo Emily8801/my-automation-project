@@ -20,13 +20,10 @@ class TestJDBookPurchase(unittest.TestCase):
         # 4. 断言成功提示
         success_text = product_page.get_success_message()
 
-        # 🔴 FIX: 原代码 assertIn("商品已成功加入购物车", ...) 多了"成功"二字，
-        #         与 JD_product_page 中 SUCCESS_MSG 的 XPath 定位文本不一致。
-        #         京东实际提示是 "商品已加入购物车"（不含"成功"），原断言会失败。
         self.assertIn("商品已加入购物车", success_text, "未找到成功提示信息")
         # 5. 断言数量为 1
         quantity = product_page.get_cart_quantity()
-        self.assertEqual(quantity, "1", f"购物车数量期望为1，实际为{quantity}")
+        self.assertEqual(quantity, "1", f"购物车数量期望为1,实际为{quantity}")
         print(f"测试通过:商品已加入购物车且数量为1")
 
     @classmethod

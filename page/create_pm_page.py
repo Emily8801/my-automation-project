@@ -1,20 +1,13 @@
 from selenium.webdriver.common.by import By
-# 🟡 原代码从 support.select 导入 Select 但未使用（下拉框由 BasePage.select_dropdown 内部处理），已移除
-# 🔴 修复：原代码 `from base_page import BasePage` 缺少 page 包前缀，项目根目录下不存在顶层 base_page 模块，
-#    运行时会 ModuleNotFoundError，导致 test_create_pm 整个模块导入失败
 from page.base_page import BasePage
 
 
 
 class CreatePMPage (BasePage):
-    # 🟡 命名：类名 PMCreatePage 与文件名 create_pm_page.py、以及 CopyPMPage 的命名风格不一致
-    #    （建议 CreatePMPage），本次未重命名以免影响调用方
     # ================= 1. 元素定位器 =================
     IFRAME_CLIENT = (By.ID, "client_frame")
     BTN_NEW_BD = (By.NAME,"NewBD")
     INPUT_STYLE_NAME = (By.ID,"param_apppmStyleName")
-    # 🟠 风险：复制页用的是 input[id^='param_APP_PM_APPPMSTYLENAME_'] 前缀匹配，本页用精确 ID
-    #    param_apppmStyleName，同一套业务表单出现两种命名规则，需核对真实 DOM
     INPUT_ABBR_NAME = (By.ID,"param_apppmAbbrStyleName")
     SELECT_INTRO_SEASON = (By.NAME,"param_apppmIntroSeason")
     SELECT_INTRO_DATE = (By.NAME,"param_apppmIntroDate")

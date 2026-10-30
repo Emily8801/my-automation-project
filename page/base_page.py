@@ -14,26 +14,18 @@ class BasePage:
     def __init__(self, driver):
         self.driver = driver
         self.logger = get_logger("PageObject")
-        # 🟠 修复：原为硬编码 10，settings.WAIT_TIMEOUT 成了死配置；现统一读取配置值
         self.default_timeout = WAIT_TIMEOUT
-        # 🔴 修复：文件里出现了 WebDriverWait[Any](...)，但 Any 未导入且该写法在实例化时
-        #    直接 NameError（实测 BasePage(object()) 报 name 'Any' is not defined），已还原
-        self.wait = WebDriverWai(self.driver, self.default_timeout)
+        self.wait = WebDriverWait(self.driver, self.default_timeout)
 
     def wait_for_page_load(self, timeout=30, poll_frequency=0.5):
-        # 🟠 修复：原方法忽略传入的 timeout / poll_frequency，固定使用 __init__ 里的 10s wait
         WebDriverWait(self.driver, timeout, poll_frequency=poll_frequency).until(
             lambda d: d.execute_script("return document.readyState") == "complete"
         )
-        # 🟠 修复：原方法没有 return self，导致 open().wait_for_page_load().login() 链式调用断链
         return self
 
     def open(self, url):
         """打开指定 URL
-
-        🔴 修复：原实现无条件执行 BASE_URL + url,造成路径重复:
-           - test_login 传 "/coachportal"(BASE_URL 已含 /coachportal/）→ /coachportal//coachportal
-           - conftest 传完整 BASE_URL → BASE_URL + BASE_URL,登录 fixture 必然失败
+        - test_login 传 "/coachportal"(BASE_URL 已含 /coachportal/）→ /coachportal//coachportal
         现规则：完整 http(s) URL 直接打开，相对路径才与 BASE_URL 拼接。
         """
         if url.startswith(("http://", "https://")):
@@ -42,15 +34,15 @@ class BasePage:
             self.driver.get(f"{BASE_URL.rstrip('/')}/{url.lstrip('/')}")
         return self
 
-    # 🟠 FIX: 将 desc 参数放在 timeout 前面，避免调用者误把描述字符串传给 timeout
-    # 🟠 FIX: 原签名 (locator, timeout=None, desc="元素") 会让 JD_home_page/JD_product_page 中的
-    #         self.find_element(self.SEARCH_INPUT, "搜索框") 把 "搜索框" 当作 timeout 传入，
-    #         然后 WebDriverWait(driver, "搜索框") 会因字符串无法做数值比较而 TypeError
-    def find_element(self, locator: tuple, desc="元素", timeout=None):
+    def find_element(self, locator, desc="元素", timeout=None):
         """
         统一显式等待封装
         :param locator: 元素定位器 (By.XPATH, "//div")
-        :param desc: 元素描述，用于日志和异常提示
+        :param desc: 元素描述，用于日志和异常提示# 假设有人之前这样调用（第二个位置参数是 desc）
+self.find_element(LOGIN_BTN, "登录按钮")
+
+# 如果你把定义换成 (self, locator, timeout=None, desc="元素")
+# 这句调用就变成把 "登录按钮" 塞给了 timeout → 逻辑全错，还不一定报错
         :param timeout: 自定义超时, None则使用默认值
         """
         #self.logger.info(f"🔍查找{desc}:{locator}")
@@ -61,7 +53,7 @@ class BasePage:
             element = WebDriverWait(self.driver,wait_time).until(
                 EC.presence_of_element_located(locator),
             )
-            self.logger.debug(f"✅{desc}查找成功")
+            self.logger.info(f"✅{desc}查找成功")
             return element
         except TimeoutException:
             raise TimeoutException(f"❌ {desc}在{wait_time}秒内未找到:{locator}") from None
@@ -87,7 +79,6 @@ class BasePage:
         element = self.find_element(locator, timeout=timeout)
         return element.text.strip()
 
-    # 🟠 FIX: 同样把 desc 放在 timeout 前面，保持和 find_element 一致的调用风格
     def click(self, locator, desc="button", timeout=None):
         """等待元素可点击后执行点击"""
         wait_time = timeout or self.default_timeout
@@ -144,19 +135,19 @@ class BasePage:
             iframe = self.find_element(frame_locator)
             self.driver.switch_to.frame(iframe)
 
-    def wait_for_element_visible(self, locator, timeout=None):
-        """
-        等待元素变为可见状态（用于流程阻塞，找不到会抛出 TimeoutException）
-        """
-        wait_time = timeout or self.default_timeout
-        WebDriverWait(self.driver, wait_time).until(
-            EC.visibility_of_element_located(locator)
-        )
-        return True
+    # def wait_for_element_visible(self, locator, timeout=None):
+    #     """
+    #     等待元素变为可见状态（用于流程阻塞，找不到会抛出 TimeoutException）
+    #     """
+    #     wait_time = timeout or self.default_timeout
+    #     WebDriverWait(self.driver, wait_time).until(
+    #         EC.visibility_of_element_located(locator)
+    #     )
+    #     return True
 
     def is_element_visible(self, locator, timeout=None):
         """
-        ✅ 核心补充：判断元素是否可见，找不到返回 False，不抛异常（专用于 if 判断和断言）
+        ✅ 核心补充：判断元素是否可见，找不到返回 False,不抛异常(专用于 if 判断和断言)
         """
         wait_time = timeout or self.default_timeout
         try:
@@ -174,13 +165,8 @@ class BasePage:
         self.logger.info(f"🔽{desc}选中value:{value}")
         return self
 
-    # 🔴 FIX: 原代码文件末尾第158-188行有一个重复的内部 class BasePage 定义，
-    #         会覆盖外部这个类，导致 open/find_element/input_text 等方法丢失。
-    #         这里把 switch_to_new_window 正确迁移到外部类，使用 Selenium 4 新 API。
     def switch_to_new_window(self):
         """切换到最新打开的新窗口（如从商品列表点击详情页）"""
         all_handles = self.driver.window_handles
         new_handle = all_handles[-1]
-        # 🔴 修复：原代码先执行 self.switch_to.window()（BasePage 根本没有 switch_to 属性，
-        #    且该调用缺少 window_handle 参数），会立刻抛 AttributeError，已删除这一行。
         self.driver.switch_to.window(new_handle)

@@ -6,10 +6,7 @@ from page.base_page import BasePage
 
 
 class CopyPMPage(BasePage):
-
-    # 🟠 风险：By.NAME 要求 iframe 的 name 属性真是 "client frame"（含空格，极不常见）；
-    #    同为 client iframe，PMCreatePage 用 By.ID "client_frame"，SearchDdpPage 用 ID "client_frame_id"，
-    #    三者不一致，需按真实 DOM 统一
+  # ================= 1. 元素定位器 =================
     FRAME_CLIENT = (By.NAME, "client_frame")
     BTN_RESET = (By.NAME,"resetButton")
     BTN_RUN = (By.NAME,"runButton")
@@ -38,17 +35,16 @@ class CopyPMPage(BasePage):
         return self
 
     def fill_copy_form(self, style_name:str,abbr_style_name: str):
-        """切换到弹窗iframe，填写复制表单"""
+        """切换到弹窗iframe,填写复制表单"""
         self.switch_to_client_frame(self.DIALOG_IFRAME)
         # 复用 BasePage 的 input_text 方法（自带清空和输入）
         self.input_text(self.INPUT_STYLE_NAME, style_name, desc="样式名称")
         self.input_text(self.INPUT_ABBR_STYLE_NAME, abbr_style_name,desc = "简称")
         return self
+        
     def save_and_confirm(self):
         """点击保存并处理确认弹窗"""
         self.click(self.BTN_SAVE)
-        # 🟠 风险：accept_alert 找不到弹窗时会静默跳过（BasePage 里 pass 掉了），
-        #    保存失败/校验报错不会被发现，测试会"假通过"。建议区分成功弹窗与错误弹窗。
         self.accept_alert(timeout=10)
         return self
 
