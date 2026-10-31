@@ -1,0 +1,12 @@
+# ===== 当前项目在用 =====
+selenium>=4.10.0          # UI 自动化（浏览器驱动）
+pytest>=7.4.0             # 测试框架
+pytest-html>=4.0.0        # HTML 测试报告（--html 参数）
+python-dotenv>=1.0.0      # 读取 .env 环境变量（账号密码配置）
+requests>=2.31.0          # 接口测试（test_practice.py）
+pytest-rerunfailures>=14.0  # 失败自动重试（--reruns 参数，需 pip install 后生效）
+
+# ===== 预留：case2auto 用例生成器（当前项目暂未使用）=====
+openai>=1.0               # 调大模型
+pandas                    # 解析用例 CSV
+pyyaml                    # 读 config.yaml
