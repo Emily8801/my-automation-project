@@ -59,10 +59,9 @@ jobs:
   # ============================================================
   # 【预留】case2auto 生成器 job —— 当前为注释状态，不会执行
   #
-  # 启用条件（三件事都就位后，删掉每行开头的 # 即可）：
-  #   1. cli.py、src/、inputs/cases.csv 已创建并本地跑通
+  # 启用条件（两件事都就位后，删掉每行开头的 # 即可）：
+  #   1. src/pipeline.py、inputs/cases.csv 已本地跑通（✅ 已就绪）
   #   2. 仓库 Settings → Secrets 里配好 LLM_API_KEY、SMTP_AUTH_CODE
-  #   3. 仓库 Settings → Pages → Source 选 GitHub Actions
   # ============================================================
   # generate:
   #   runs-on: ubuntu-latest
@@ -80,17 +79,19 @@ jobs:
   #     - name: Generate test scripts
   #       env:
   #         LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-  #       run: python cli.py inputs/cases.csv
+  #       run: python src/pipeline.py
   #
   #     # 跑生成出来的用例并产出 Allure 结果
   #     - name: Run generated tests
   #       run: pytest output/generated_project/tests --alluredir=reports/allure-results
   #
-  #     # 部署 Allure 在线报告到 GitHub Pages
+  #     # 部署 Allure 在线报告到 gh-pages 分支（与 test job 同一套方式）
   #     - name: Deploy Allure report to Pages
-  #       uses: actions/upload-pages-artifact@v3
+  #       if: always()
+  #       uses: peaceiris/actions-gh-pages@v3
   #       with:
-  #         path: reports/allure-report
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: reports/allure-report
   #
   #     # 无论成败都发结果邮件
   #     - name: Send result email
