@@ -1,25 +1,22 @@
 import allure
 import pytest
 from pages.login_page import LoginPage
-
+from pages.inventory_page import InventoryPage
 
 @allure.feature("登录")
 @allure.title("正确账号密码登录成功")
-@pytest.mark.parametrize("username,password", [("testuser", "testpass")])
+@pytest.mark.parametrize("username,password", [("standard_user", "secret_sauce")])
 def test_login_success(driver, username, password):
     login_page = LoginPage(driver)
-    
-    with allure.step("打开登录页"):
+    inventory_page = InventoryPage(driver)
+
+    with allure.step("打开登录页面"):
         login_page.open()
-    
-    with allure.step("输入正确账号密码"):
-        login_page.input_username(username)
-        login_page.input_password(password)
-    
-    with allure.step("点击登录按钮"):
-        login_page.click_login()
-    
-    with allure.step("验证跳转到主页并显示用户头像"):
-        login_page.wait_for_home_page()
-        avatar = login_page.get_user_avatar()
-        assert avatar.is_displayed(), "用户头像未显示"
+
+    with allure.step("输入用户名和密码"):
+        login_page.login(username, password)
+
+    with allure.step("验证登录成功"):
+        assert "/inventory.html" in driver.current_url, "登录后URL未跳转到inventory.html"
+        inventory_items = inventory_page.get_inventory_items()
+        assert len(inventory_items) > 0, "商品列表数量未大于0"

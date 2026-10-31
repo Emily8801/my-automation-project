@@ -1,6 +1,5 @@
 """模型调用封装：读 config.yaml 的 llm 段，api_key 用 ${ENV} 形式从环境变量展开"""
 import os
-
 import yaml
 from dotenv import load_dotenv
 from openai import OpenAI

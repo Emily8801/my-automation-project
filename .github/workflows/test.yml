@@ -1,7 +1,7 @@
 # GitHub Actions 工作流：推送代码后自动运行接口测试
 # 说明：Selenium UI 用例依赖内网 UAT 环境，云端 runner 访问不到，
 #       所以 CI 里只跑不依赖内网的接口用例（test_practice.py）
-name: API Tests
+name: Automation Tests
 
 # ========== 触发时机 ==========
 on:

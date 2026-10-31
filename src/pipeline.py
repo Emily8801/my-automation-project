@@ -9,7 +9,7 @@ import re
 import yaml
 
 from llm import chat
-from writer import split_files, write_project, append_case_meta
+from writer import split_files, write_project, write_conftest
 
 
 def load_prompt(name: str) -> str:
@@ -97,9 +97,10 @@ def run():
                     metas.append((rid, fn_match.group(1),
                                   c.get("priority", "P2"), c.get("module", "")))
 
-    # 全部生成完成后统一写 CASE_META
-    for rid, fn, pr, mod in metas:
-        append_case_meta(out_dir, rid, fn, priority=pr, module=mod)
+    # 全部生成完成后注入固定 conftest（driver fixture + CASE_META）
+    # 浏览器生命周期属于框架基础设施，交给模型生成不可靠（曾出现 pytest.config 幻觉代码），
+    # 因此由 pipeline 统一写入，模型只允许产出 pages/ 与 tests/
+    write_conftest(out_dir, metas)
 
     print(f"\n✅ 全部生成完成！产物目录：{out_dir}")
     print("📌 下一步：git add . && git commit && git push → CI 自动跑测+出报告+发邮件")

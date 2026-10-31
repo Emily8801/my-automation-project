@@ -30,23 +30,42 @@ def write_project(files, output_dir):
     print(f"已落盘 {len(files)} 个文件 → {output_dir}")
 
 
-def append_case_meta(output_dir, case_id, func_name, priority="P2", module=""):
-    """把用例编号↔函数映射写入 conftest 的 CASE_META（供Allure标签）"""
-    p = os.path.join(output_dir, "conftest.py")
-    if not os.path.exists(p):
-        with open(p, "w", encoding="utf-8") as f:
-            f.write("import pytest, allure\nCASE_META = {}\n")
-    with open(p, encoding="utf-8") as f:
-        txt = f.read()
-    if func_name in txt:
-        return
-    line = f'    "{func_name}": {{"id": "{case_id}", "priority": "{priority}", "module": "{module}"}},\n'
-    if "CASE_META = {" in txt:
-        txt = txt.replace("CASE_META = {", "CASE_META = {\n" + line, 1)
-    else:
-        # 模型生成的 conftest 没有 CASE_META 标记 → 在文件末尾补一个
-        if not txt.endswith("\n"):
-            txt += "\n"
-        txt += "\nCASE_META = {\n" + line + "}\n"
-    with open(p, "w", encoding="utf-8") as f:
-        f.write(txt)
+# 固定 conftest 模板：浏览器生命周期属框架基础设施，不让模型生成（防止幻觉代码）
+CONFTEST_TEMPLATE = '''"""生成工程基础设施：driver fixture + CASE_META（由 pipeline 统一注入，非模型生成）"""
+import os
+
+import pytest
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+CASE_META = {
+__CASE_META__
+}
+
+
+@pytest.fixture(scope="session")
+def driver():
+    """浏览器生命周期：检测到 CI 或 HEADLESS 环境变量时自动切无头模式"""
+    options = Options()
+    if os.environ.get("CI") or os.environ.get("HEADLESS"):
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")
+    d = webdriver.Chrome(options=options)
+    yield d
+    d.quit()
+'''
+
+
+def write_conftest(output_dir, metas):
+    """注入固定 conftest.py：driver fixture + CASE_META（覆盖模型可能违规生成的版本）
+
+    metas: [(case_id, func_name, priority, module), ...]
+    """
+    lines = "".join(
+        f'    "{fn}": {{"id": "{cid}", "priority": "{pr}", "module": "{mod}"}},\n'
+        for cid, fn, pr, mod in metas
+    )
+    content = CONFTEST_TEMPLATE.replace("__CASE_META__", lines.rstrip("\n"))
+    with open(os.path.join(output_dir, "conftest.py"), "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"已注入固定 conftest.py（{len(metas)} 条 CASE_META）")
