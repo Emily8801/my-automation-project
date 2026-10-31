@@ -27,13 +27,11 @@ mail:
   smtp:
     host: "smtp.qq.com"              # QQ: smtp.qq.com:465 / 163: smtp.163.com:465 / Gmail: smtp.gmail.com:587
     port: 465
-    user: "your_account@qq.com"
+    user: "395725813@qq.com"
     password: "${SMTP_AUTH_CODE}"    # 授权码，不是登录密码！见 README 第六节
     ssl: true                        # 465 用 SSL；587 用 STARTTLS
   # 收件人路由：每次都发 always；失败额外加发。若不想分级，只保留 always 即可
   recipients:
-    always: ["qa_team@company.com"]          # 每次必发
-    on_failure: ["lead@company.com"]         # 仅失败时额外加发
-    on_p0_failure: ["manager@company.com"]   # 仅 P0(blocker/critical) 失败时额外加发
+    always: ["395725813@qq.com"]             # 每次必发
   attach_report: false               # 是否把 allure-report 打包成 zip 附件
-  pages_url: "https://<你的名>.github.io/case2auto/"   # Allure 在线报告链接
+  pages_url: "https://Emily8801.github.io/my-automation-project/"   # Allure 在线报告链接
