@@ -1,2 +1,4 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sat Oct 31 15:52:10 UTC 2026","Sat Oct 31 15:52:10 UTC 2026","77","testcase","test_practice","","","","test_user_detail","查询用户详情接口，校验状态码和返回字段"
+"broken","Sat Oct 31 15:53:05 UTC 2026","Sat Oct 31 15:53:05 UTC 2026","0","output.generated_project.tests","test_login_TC001","","","","正确账号密码登录成功",""
+"broken","Sat Oct 31 15:53:16 UTC 2026","Sat Oct 31 15:53:16 UTC 2026","0","output.generated_project.tests","test_product_TC003","TestProductSearch","","","搜索已存在的商品",""
+"broken","Sat Oct 31 15:53:13 UTC 2026","Sat Oct 31 15:53:13 UTC 2026","280","output.generated_project.tests","test_login_TC002","","","","错误密码登录失败提示",""
