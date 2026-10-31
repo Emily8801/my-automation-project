@@ -41,7 +41,12 @@ def append_case_meta(output_dir, case_id, func_name, priority="P2", module=""):
     if func_name in txt:
         return
     line = f'    "{func_name}": {{"id": "{case_id}", "priority": "{priority}", "module": "{module}"}},\n'
-    txt = txt.replace("CASE_META = {", "CASE_META = {\n" + line, 1) if "CASE_META = {" in txt \
-        else re.sub(r"(CASE_META = \{)", r"\1\n" + line.rstrip(), txt, count=1)
+    if "CASE_META = {" in txt:
+        txt = txt.replace("CASE_META = {", "CASE_META = {\n" + line, 1)
+    else:
+        # 模型生成的 conftest 没有 CASE_META 标记 → 在文件末尾补一个
+        if not txt.endswith("\n"):
+            txt += "\n"
+        txt += "\nCASE_META = {\n" + line + "}\n"
     with open(p, "w", encoding="utf-8") as f:
         f.write(txt)

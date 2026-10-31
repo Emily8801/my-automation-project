@@ -4,7 +4,9 @@
 【工程结构】
 - 采用 Page Object：每个页面一个类，元素定位器(By.*)与操作方法封装在页面对象中，
   测试逻辑 test_xxx 只调用页面对象方法，禁止在测试函数里直接写 driver.find_element。
-- 文件划分：每个被测页面一个 pages/xxx_page.py；用例放 tests/test_模块_功能.py；公共 fixture 放 conftest.py。
+- 文件划分：每个被测页面一个 pages/xxx_page.py；公共 fixture 放 conftest.py。
+- 测试文件名必须带用例编号（取自【待转换用例】的用例编号），形如 tests/test_模块_TC001.py，
+  防止同模块多条用例互相覆盖。
 
 【稳定性硬约束】
 1. 禁止 time.sleep；所有等待用 WebDriverWait + expected_conditions，超时默认 10s（可配置）。
@@ -28,7 +30,7 @@
 
 【输出协议 —— 必须严格遵守，供程序自动拆分落盘】
 - 每个文件的内容用一行注释标题开头：# FILE: 相对路径
-  例如  # FILE: pages/login_page.py  # FILE: tests/test_login.py  # FILE: conftest.py
+  例如  # FILE: pages/login_page.py  # FILE: tests/test_login_TC001.py  # FILE: conftest.py
 - 每个 # FILE: 标题之后紧跟该文件完整代码(一个 python 代码块)。
 - 只输出文件，不要输出多余解释文字。若 conftest.py 无需新增 fixture，也输出一个最小骨架。
 - 代码块用 ```python 包裹。

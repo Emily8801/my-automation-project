@@ -73,6 +73,7 @@ def run():
 
     # ========== Stage C：逐条生成脚本 ==========
     print("\n⚙️ Stage C：逐条生成脚本...")
+    metas = []  # (case_id, func_name, priority, module)，循环结束后统一写入
     for i, c in enumerate(todo_cases, 1):
         rid = c["case_id"]
         print(f"   [{i}/{len(todo_cases)}] 生成 {rid} ...")
@@ -88,18 +89,17 @@ def run():
             print(f"   ⚠️ {rid} 未解析出文件块，跳过")
             continue
         write_project(files, out_dir)
-        # 把 test_ 函数名 ↔ 用例编号映射写入 conftest.CASE_META
+        # 收集 test_ 函数名 ↔ 用例编号映射（此时不写，避免被后续用例的 conftest.py 覆盖）
         for rel, content in files.items():
             if rel.startswith("tests/") and content:
                 fn_match = re.search(r"def (test_\w+)", content)
                 if fn_match:
-                    append_case_meta(
-                        out_dir,
-                        rid,
-                        fn_match.group(1),
-                        priority=c.get("priority", "P2"),
-                        module=c.get("module", ""),
-                    )
+                    metas.append((rid, fn_match.group(1),
+                                  c.get("priority", "P2"), c.get("module", "")))
+
+    # 全部生成完成后统一写 CASE_META
+    for rid, fn, pr, mod in metas:
+        append_case_meta(out_dir, rid, fn, priority=pr, module=mod)
 
     print(f"\n✅ 全部生成完成！产物目录：{out_dir}")
     print("📌 下一步：git add . && git commit && git push → CI 自动跑测+出报告+发邮件")
