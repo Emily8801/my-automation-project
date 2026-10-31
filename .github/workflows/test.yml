@@ -57,45 +57,60 @@ jobs:
           publish_dir: reports/allure-report
 
   # ============================================================
-  # 【预留】case2auto 生成器 job —— 当前为注释状态，不会执行
-  #
-  # 启用条件（两件事都就位后，删掉每行开头的 # 即可）：
-  #   1. src/pipeline.py、inputs/cases.csv 已本地跑通（✅ 已就绪）
-  #   2. 仓库 Settings → Secrets 里配好 LLM_API_KEY、SMTP_AUTH_CODE
+  # case2auto 生成器 job —— 仅限手动触发（Actions 页面点 Run workflow）
+  # 不跟着 push/定时自动跑，避免自动消耗 GLM 免费额度。
+  # 前提：仓库 Settings → Secrets 里配好 LLM_API_KEY、SMTP_AUTH_CODE
+  # 注意：生成的脚本定位器是模型按占位信息猜的，未校准，跑起来大概率失败，
+  #       本 job 主要用于演示"AI 生成 → 跑测 → 报告 → 邮件"的完整链路
   # ============================================================
-  # generate:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.14"
-  #
-  #     - name: Install dependencies
-  #       run: pip install -r requirements.txt
-  #
-  #     # AI 读用例表 → 生成 pytest 脚本到 output/generated_project/
-  #     - name: Generate test scripts
-  #       env:
-  #         LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-  #       run: python src/pipeline.py
-  #
-  #     # 跑生成出来的用例并产出 Allure 结果
-  #     - name: Run generated tests
-  #       run: pytest output/generated_project/tests --alluredir=reports/allure-results
-  #
-  #     # 部署 Allure 在线报告到 gh-pages 分支（与 test job 同一套方式）
-  #     - name: Deploy Allure report to Pages
-  #       if: always()
-  #       uses: peaceiris/actions-gh-pages@v3
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         publish_dir: reports/allure-report
-  #
-  #     # 无论成败都发结果邮件
-  #     - name: Send result email
-  #       if: always()
-  #       env:
-  #         SMTP_AUTH_CODE: ${{ secrets.SMTP_AUTH_CODE }}
-  #       run: python src/mailer.py
+  generate:
+    if: github.event_name == 'workflow_dispatch'   # 仅手动触发
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 部署 gh-pages 需要
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # AI 读用例表 → 生成 pytest 脚本到 output/generated_project/
+      - name: Generate test scripts
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python src/pipeline.py
+
+      # 跑生成出来的用例并产出 Allure 结果（预期会失败，仅演示链路）
+      - name: Run generated tests
+        run: pytest output/generated_project/tests --alluredir=reports/allure-results
+
+      # 生成 Allure HTML 报告
+      - name: Install Allure commandline
+        if: always()
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+          sudo tar -zxf allure-2.29.0.tgz -C /opt/
+          sudo ln -sf /opt/allure-2.29.0/bin/allure /usr/bin/allure
+
+      - name: Generate Allure report
+        if: always()
+        run: allure generate reports/allure-results -o reports/allure-report --clean
+
+      # 部署 Allure 在线报告到 gh-pages 分支（与 test job 同一套方式）
+      - name: Deploy Allure report to Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: reports/allure-report
+
+      # 无论成败都发结果邮件
+      - name: Send result email
+        if: always()
+        env:
+          SMTP_AUTH_CODE: ${{ secrets.SMTP_AUTH_CODE }}
+        run: python src/mailer.py
