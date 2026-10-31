@@ -173,7 +173,7 @@ class Mail126Page(BasePage):
         return self
 
     def is_logged_in(self, timeout=None):
-        """判断是否进入邮箱主页：URL 跳到 js6 主框架，或出现左侧收件箱入口"""
+        """判断是否进入邮箱主页:URL 跳到 js6 主框架，或出现左侧收件箱入口"""
         wait_time = timeout or self.default_timeout
         try:
             WebDriverWait(self.driver, wait_time).until(self._has_entered_inbox)
