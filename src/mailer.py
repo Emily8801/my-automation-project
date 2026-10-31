@@ -1,4 +1,6 @@
 import os, json, glob, smtplib, zipfile, ssl, yaml
+from dotenv import load_dotenv
+load_dotenv()  # 让 .env 里的 SMTP_AUTH_CODE 生效
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
