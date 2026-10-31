@@ -8,6 +8,9 @@ on:
   push:
     branches: [main]        # 推送到 main 分支时触发
   workflow_dispatch:        # 允许在 GitHub 网页上手动点击触发
+  schedule:
+    - cron: "0 1 * * *"     # 每天定时跑（cron 是 UTC 时间，0 1 * * * = 北京时间 09:00）
+                            # 其他例子：0 10 * * 1-5 = 周一~周五北京时间 18:00；0 */4 * * * = 每 4 小时
 
 jobs:
   test:
