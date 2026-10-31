@@ -1,10 +1,4 @@
-import os
-import smtplib
 from datetime import datetime
-from email import encoders
-from email.mime.base import MIMEBase
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from pathlib import Path
 
 import pytest
@@ -14,11 +8,6 @@ from common.logger import get_logger
 # 统一锚定项目根目录，避免从不同工作目录启动时路径漂移
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# 让 QQ_MAIL_* 等邮件配置也能从 .env 读取（config/settings 之外的配置入口）
-from dotenv import load_dotenv
-load_dotenv(PROJECT_ROOT / ".env")
-
-REPORT_PATH = PROJECT_ROOT / "report" / "report.html"
 SCREENSHOT_DIR = PROJECT_ROOT / "screenshots"
 
 logger = get_logger("fixture")
@@ -67,66 +56,8 @@ def pytest_runtest_makereport(item, call):
         logger.error(f"❌ 失败截图保存失败: {e}")
 
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_sessionfinish(session, exitstatus):
-    """测试会话结束后自动发送邮件"""
-    yield  # 等待所有测试完成
-
-    # 可选：只在有失败时才发送，取消下面两行注释即可
-    # if session.testsfailed == 0:
-    #     return
-
-    total = session.testscollected
-    failed = session.testsfailed
-
-    # 🟡 邮件的发件人/收件人/SMTP 支持环境变量覆盖，避免散落在代码里
-    sender = os.getenv("QQ_MAIL_FROM", "395725813@qq.com")
-    recipients = [
-        addr.strip()
-        for addr in os.getenv("QQ_MAIL_TO", "receiver@example.com").split(",")
-        if addr.strip()
-    ]
-
-    msg = MIMEMultipart()
-    msg["From"] = sender
-    msg["To"] = ", ".join(recipients)
-    msg["Subject"] = f"自动化测试报告 - 通过：{total - failed} 失败：{failed}"
-
-    # 邮件正文
-    body = f"本次共执行{total}条用例。失败{failed}条。\n详见附件报告。"
-    msg.attach(MIMEText(body, "plain", "utf-8"))
-
-    # 添加 HTML 报告附件
-    # 🔴 修复：未生成报告（例如直接跑 unittest、或 pytest-html 未安装）时 open 会 FileNotFoundError，
-    #    导致整个 sessionfinish 崩溃，这里先做存在性判断
-    if REPORT_PATH.exists():
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(REPORT_PATH.read_bytes())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", "attachment", filename="report.html")
-        msg.attach(part)
-    else:
-        logger.warning(f"未找到测试报告 {REPORT_PATH}，将只发送文本邮件")
-
-    auth_code = os.getenv("QQ_MAIL_AUTH_CODE", "")
-    if not auth_code:
-        logger.error("❌ 未设置 QQ_MAIL_AUTH_CODE 环境变量，跳过邮件发送")
-        return
-
-    smtp_host = os.getenv("QQ_MAIL_SMTP", "smtp.qq.com")
-    try:
-        smtp_port = int(os.getenv("QQ_MAIL_SMTP_PORT", "465"))
-    except ValueError:
-        smtp_port = 465
-
-    # 🔴 修复：原代码 server.login(...,"你的授权码") 硬编码占位符，与"禁止硬编码密码"的约定冲突
-    try:
-        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-            server.login(sender, auth_code)
-            server.sendmail(sender, recipients, msg.as_string())
-        logger.info("✅ 测试报告邮件发送成功")
-    except Exception as e:
-        logger.error(f"❌ 邮件发送失败: {e}")
+# 🟠 说明：旧版"会话结束发纯文本邮件"的 pytest_sessionfinish 钩子已删除，
+#    结果邮件统一由 src/mailer.py（AutoTest 同款 HTML 报告）发送，见 bin/run_test.py。
 
 
 # 🟠 结构说明：原文件中的 session 级 driver fixture 和 login fixture 已删除。
