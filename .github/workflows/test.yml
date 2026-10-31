@@ -24,9 +24,9 @@ jobs:
         with:
           python-version: "3.14"
 
-      # 3. 安装依赖（pytest-rerunfailures/allure-pytest 是 pytest.ini 里 addopts 必需的）
+      # 3. 安装依赖（pytest-rerunfailures/allure-pytest 是 addopts 必需的；conftest.py 依赖 python-dotenv）
       - name: Install dependencies
-        run: pip install requests pytest pytest-rerunfailures allure-pytest
+        run: pip install requests pytest pytest-rerunfailures allure-pytest python-dotenv
 
       # 4. 运行接口测试用例（pytest.ini 自动带 --alluredir=reports/allure-results）
       - name: Run API tests
