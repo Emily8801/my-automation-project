@@ -1,25 +1,39 @@
 # ============================================================
-# config.yaml —— case2auto 用例生成器配置（预留）
-#
-# ⚠️ 分工约定（键不重叠，避免多处配置互相打架）：
-#   - 本文件：只放生成器专属配置（模型、收件人路由）
-#   - config/settings.py：自动化框架配置（浏览器、URL、超时）
-#   - .env：所有敏感凭据（统一入口，不进 git）
-# 注意：当前没有任何代码读取本文件，属于结构占位，
-#       等 case2auto 功能落地时由 src/ 下的代码消费。
+# case2auto 配置：测试用例 -> 自动化脚本 生成器
+# 接入任意 OpenAI 兼容模型（智谱 / 通义 / DeepSeek / GPT）
 # ============================================================
 
 llm:
-  model: gpt-4o                 # 用例生成所用的大模型
-  api_key_env: LLM_API_KEY      # key 本体放 .env，这里只记录环境变量名
-  temperature: 0.2              # 生成温度，越低输出越稳定
+  # 智谱GLM；换通义/DeepSeek/GPT 只改 base_url 与 model
+  base_url: "https://open.bigmodel.cn/api/paas/v4"
+  api_key: "${LLM_API_KEY}"          # 从环境变量读，禁止硬编码明文
+  model: "glm-4-plus"
+  temperature: 0.2                    # 生成代码要低温度，减少乱发挥
+  timeout: 120
 
 run:
-  human_gate: true              # 每段生成后暂停，人工确认再进下一段
-  output_dir: output/generated_project  # 生成脚本的落盘目录
+  human_gate: true                    # 每段跑完暂停，人工确认后再进下一段
+  resume: true                        # 已存在的中间产物跳过（断点续跑）
+  output_dir: "output"                # 中间产物 stage_a/b/c.md + review.md
+  project_dir: "output/generated_project"   # 最终落盘的 pytest 工程
 
+selenium:
+  wait_timeout: 10                    # WebDriverWait 默认超时（秒）
+  forbid_time_sleep: true             # 注入到 Stage C 的硬约束开关
+
+# ---------- 报告邮件：跑一次发一次，成败都发 ----------
 mail:
+  enabled: true
+  smtp:
+    host: "smtp.qq.com"              # QQ: smtp.qq.com:465 / 163: smtp.163.com:465 / Gmail: smtp.gmail.com:587
+    port: 465
+    user: "your_account@qq.com"
+    password: "${SMTP_AUTH_CODE}"    # 授权码，不是登录密码！见 README 第六节
+    ssl: true                        # 465 用 SSL；587 用 STARTTLS
+  # 收件人路由：每次都发 always；失败额外加发。若不想分级，只保留 always 即可
   recipients:
-    always:                     # 每次跑完必发的收件人
-      - 395725813@qq.com
-    on_failure: []              # 仅失败时加发的收件人（不需要就留空）
+    always: ["qa_team@company.com"]          # 每次必发
+    on_failure: ["lead@company.com"]         # 仅失败时额外加发
+    on_p0_failure: ["manager@company.com"]   # 仅 P0(blocker/critical) 失败时额外加发
+  attach_report: false               # 是否把 allure-report 打包成 zip 附件
+  pages_url: "https://<你的名>.github.io/case2auto/"   # Allure 在线报告链接
