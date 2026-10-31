@@ -23,3 +23,6 @@ screenshots/
 logs/
 
 report/
+
+# case2auto 生成器产物（中间产物 + 生成的工程 + allure 报告）
+output/
