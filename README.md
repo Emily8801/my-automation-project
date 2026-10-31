@@ -1,4 +1,6 @@
-# 测试用例 → 自动化脚本 生成器（含 Allure + GitHub Actions + 邮件）
+<br />
+
+# **case2auto：**测试用例 → 自动化脚本 生成器（含 Allure + GitHub Actions + 邮件）
 
 把"需求 → 功能用例 → 自动化脚本 → CI 跑测 → Allure 报告 → 邮件推送"串成一条可追溯流水线。
 
