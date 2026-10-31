@@ -1,14 +1,6 @@
-"""模型输出落盘：解析 Stage C 的 # FILE: 协议输出，拆分写入目标目录
-
-Stage C 提示词约定了输出协议（见 prompts/stage_c_generate.md）：
-  # FILE: pages/login_page.py
-  ```python
-  <代码>
-  ```
-本模块负责按该协议解析并写文件。
-"""
+"""模型输出落盘：按 Stage C 提示词约定的 # FILE: 协议拆分并写入目标目录"""
+import os
 import re
-from pathlib import Path
 
 # 匹配 "# FILE: 相对路径" 标题行
 FILE_HEADER = re.compile(r"^#\s*FILE:\s*(\S+)\s*$", re.MULTILINE)
@@ -16,30 +8,40 @@ FILE_HEADER = re.compile(r"^#\s*FILE:\s*(\S+)\s*$", re.MULTILINE)
 CODE_BLOCK = re.compile(r"```python\s*\n(.*?)```", re.DOTALL)
 
 
-def split_files(model_output: str) -> dict[str, str]:
-    """把模型输出拆成 {相对路径: 文件内容} 的字典
-
-    每个 '# FILE: xxx' 标题后的第一个 python 代码块，即为该文件的内容。
-    """
-    files: dict[str, str] = {}
-    headers = list(FILE_HEADER.finditer(model_output))
+def split_files(text):
+    """把模型输出拆成 {相对路径: 文件内容}。每个 # FILE: 标题后取第一个 python 代码块"""
+    files = {}
+    headers = list(FILE_HEADER.finditer(text))
     for i, header in enumerate(headers):
-        path = header.group(1)
-        # 该标题到下一段标题之间的文本，找第一个 python 代码块
-        end = headers[i + 1].start() if i + 1 < len(headers) else len(model_output)
-        block = CODE_BLOCK.search(model_output, header.end(), end)
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        block = CODE_BLOCK.search(text, header.end(), end)
         if block:
-            files[path] = block.group(1).rstrip() + "\n"
+            files[header.group(1)] = block.group(1).rstrip() + "\n"
     return files
 
 
-def write_files(files: dict[str, str], project_dir: str | Path) -> list[Path]:
-    """把拆分出的文件写入 project_dir，返回实际写入的路径列表"""
-    root = Path(project_dir)
-    written = []
-    for rel_path, content in files.items():
-        target = root / rel_path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
-        written.append(target)
-    return written
+def write_project(files, output_dir):
+    """把拆分出的文件写入 output_dir"""
+    for rel, content in files.items():
+        path = os.path.join(output_dir, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    print(f"已落盘 {len(files)} 个文件 → {output_dir}")
+
+
+def append_case_meta(output_dir, case_id, func_name, priority="P2", module=""):
+    """把用例编号↔函数映射写入 conftest 的 CASE_META（供Allure标签）"""
+    p = os.path.join(output_dir, "conftest.py")
+    if not os.path.exists(p):
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("import pytest, allure\nCASE_META = {}\n")
+    with open(p, encoding="utf-8") as f:
+        txt = f.read()
+    if func_name in txt:
+        return
+    line = f'    "{func_name}": {{"id": "{case_id}", "priority": "{priority}", "module": "{module}"}},\n'
+    txt = txt.replace("CASE_META = {", "CASE_META = {\n" + line, 1) if "CASE_META = {" in txt \
+        else re.sub(r"(CASE_META = \{)", r"\1\n" + line.rstrip(), txt, count=1)
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(txt)

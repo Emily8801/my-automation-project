@@ -17,6 +17,12 @@ run:
   output_dir: "output"                # 中间产物 stage_a/b/c.md + review.md
   project_dir: "output/generated_project"   # 最终落盘的 pytest 工程
 
+# ---------- 目录路径（pipeline.py 读取） ----------
+paths:
+  prompts: "prompts"                  # 四段提示词目录
+  inputs: "inputs/cases.csv"          # 手工用例台账
+  output: "output/generated_project"  # 生成脚本落盘目录（与 run.project_dir 保持一致）
+
 selenium:
   wait_timeout: 10                    # WebDriverWait 默认超时（秒）
   forbid_time_sleep: true             # 注入到 Stage C 的硬约束开关
