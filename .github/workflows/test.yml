@@ -58,11 +58,11 @@ jobs:
           publish_dir: reports/allure-report
 
   # ============================================================
-  # case2auto 生成器 job —— 仅限手动触发（Actions 页面点 Run workflow）
-  # 不跟着 push/定时自动跑，避免自动消耗 GLM 免费额度。
-  # 前提：仓库 Settings → Secrets 里配好 LLM_API_KEY、SMTP_AUTH_CODE
-  # 注意：生成的脚本定位器是模型按占位信息猜的，未校准，跑起来大概率失败，
-  #       本 job 主要用于演示"AI 生成 → 跑测 → 报告 → 邮件"的完整链路
+  # case2auto 生成产物验证 job —— 仅限手动触发（Actions 页面点 Run workflow）
+  # 架构约定：AI 生成在本地进行（python src/pipeline.py），人工校准后提交
+  # output/generated_project/；CI 只跑"已提交的校准版"，不在云端现场抽卡，
+  # 否则模型每次输出有差异，结果不可复现。
+  # 前提：仓库 Settings → Secrets 里配好 SMTP_AUTH_CODE（发邮件用）
   # ============================================================
   generate:
     if: github.event_name == 'workflow_dispatch'   # 仅手动触发
@@ -79,15 +79,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # AI 读用例表 → 生成 pytest 脚本到 output/generated_project/
-      - name: Generate test scripts
-        env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-        run: python src/pipeline.py
-
-      # 跑生成出来的用例并产出 Allure 结果（预期会失败，仅演示链路）
+      # 跑本地校准后提交的生成用例（saucedemo 真实站点，预期全绿）。
+      # 必须在 generated_project 目录内用 python -m pytest 运行，
+      # 保证 pages/ 包可被 import，且 conftest.py 的 driver fixture 生效（CI 环境自动无头）
       - name: Run generated tests
-        run: pytest output/generated_project/tests --alluredir=reports/allure-results
+        working-directory: output/generated_project
+        # -o addopts="" 清空根目录 pytest.ini 的默认参数（其 --alluredir 相对路径会指错位置），
+        # 这里显式重声明所需参数，确保 Allure 结果落到仓库根 reports/
+        run: python -m pytest tests -o addopts="" -v --tb=short --reruns 1 --reruns-delay 2 --alluredir=../../reports/allure-results --clean-alluredir
 
       # 生成 Allure HTML 报告
       - name: Install Allure commandline
