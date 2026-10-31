@@ -27,13 +27,20 @@ jobs:
         with:
           python-version: "3.14"
 
-      # 3. 安装依赖（pytest-rerunfailures/allure-pytest 是 addopts 必需的；conftest.py 依赖 python-dotenv）
+      # 3. 安装依赖（rerunfailures/allure 是 addopts 必需的；dotenv 是 conftest 依赖；selenium 是 126 UI 用例依赖）
       - name: Install dependencies
-        run: pip install requests pytest pytest-rerunfailures allure-pytest python-dotenv
+        run: pip install requests pytest pytest-rerunfailures allure-pytest python-dotenv selenium
 
       # 4. 运行接口测试用例（pytest.ini 自动带 --alluredir=reports/allure-results）
       - name: Run API tests
         run: pytest testcase/test_practice.py -v
+
+      # 4.5 跑 126 邮箱 UI 用例（云端自动无头；账号密码从 Secrets 注入，结果与接口用例进同一份 Allure 报告）
+      - name: Run 126 mail UI test
+        env:
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+        run: pytest testcase/test_mail_126_login.py -v
 
       # 5. 安装 Allure 命令行（ubuntu runner 自带 Java）
       - name: Install Allure commandline

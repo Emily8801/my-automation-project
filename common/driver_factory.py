@@ -1,5 +1,7 @@
 from importlib.metadata import entry_points
 
+import os
+
 from selenium import webdriver
 from config.settings import BROWSER
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -28,6 +30,10 @@ def get_driver(browser: str = "chrome"):
     if browser_lower == "chrome":
         for arg in ("--disable-gpu","--no-sandbox","--disable-dev-shm-usage"):
             options.add_argument(arg)
+        # CI 云端没有显示器，自动切无头模式（GitHub Actions 会注入 CI=true；本地想无头可设 HEADLESS=1）
+        if os.getenv("CI") or os.getenv("HEADLESS"):
+            options.add_argument("--headless=new")
+            options.add_argument("--window-size=1920,1080")
 
     driver = driver_class(options=options)
     driver.maximize_window()
