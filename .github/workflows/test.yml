@@ -79,6 +79,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # 诊断：确认 Secret 是否传进环境（只打印长度，不泄露值）。长度=0 说明 Secret 名字/位置不对
+      - name: Check LLM_API_KEY presence
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python -c "import os; v=os.getenv('LLM_API_KEY'); print('LLM_API_KEY 长度:', len(v) if v else 0)"
+
       # AI 读用例表 → 生成 pytest 脚本到 output/generated_project/
       - name: Generate test scripts
         env:
