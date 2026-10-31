@@ -1,0 +1,2 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sat Oct 31 13:40:42 UTC 2026","Sat Oct 31 13:40:42 UTC 2026","81","testcase","test_practice","","","","test_user_detail","查询用户详情接口，校验状态码和返回字段"
