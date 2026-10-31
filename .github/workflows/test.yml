@@ -12,6 +12,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 部署 Allure 报告到 gh-pages 分支需要写权限
 
     steps:
       # 1. 拉取仓库代码
@@ -22,13 +24,34 @@ jobs:
         with:
           python-version: "3.14"
 
-      # 3. 安装依赖（接口用例只需要 requests 和 pytest）
+      # 3. 安装依赖（pytest-rerunfailures/allure-pytest 是 pytest.ini 里 addopts 必需的）
       - name: Install dependencies
-        run: pip install requests pytest
+        run: pip install requests pytest pytest-rerunfailures allure-pytest
 
-      # 4. 运行接口测试用例
+      # 4. 运行接口测试用例（pytest.ini 自动带 --alluredir=reports/allure-results）
       - name: Run API tests
         run: pytest testcase/test_practice.py -v
+
+      # 5. 安装 Allure 命令行（ubuntu runner 自带 Java）
+      - name: Install Allure commandline
+        if: always()
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+          sudo tar -zxf allure-2.29.0.tgz -C /opt/
+          sudo ln -sf /opt/allure-2.29.0/bin/allure /usr/bin/allure
+
+      # 6. 生成 Allure HTML 报告（无论用例成败都生成）
+      - name: Generate Allure report
+        if: always()
+        run: allure generate reports/allure-results -o reports/allure-report --clean
+
+      # 7. 部署到 gh-pages 分支（需先在仓库 Settings → Pages → Source 选 gh-pages 分支）
+      - name: Deploy Allure report to Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: reports/allure-report
 
   # ============================================================
   # 【预留】case2auto 生成器 job —— 当前为注释状态，不会执行

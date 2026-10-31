@@ -5,6 +5,7 @@ pytest-html>=4.0.0        # HTML 测试报告（--html 参数）
 python-dotenv>=1.0.0      # 读取 .env 环境变量（账号密码配置）
 requests>=2.31.0          # 接口测试（test_practice.py）
 pytest-rerunfailures>=14.0  # 失败自动重试（--reruns 参数，需 pip install 后生效）
+allure-pytest>=2.13.0     # Allure 报告（--alluredir 参数）
 
 # ===== 预留：case2auto 用例生成器（当前项目暂未使用）=====
 openai>=1.0               # 调大模型
