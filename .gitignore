@@ -24,5 +24,9 @@ logs/
 
 report/
 
-# case2auto 生成器产物（中间产物 + 生成的工程 + allure 报告）
-output/
+# case2auto 中间产物与自愈补丁（生成的 pytest 工程除外，需进 Git 供 CI 运行）
+output/*
+!output/generated_project/
+
+# case2auto 测试报告
+reports/
