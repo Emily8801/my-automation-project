@@ -1,1 +1,1 @@
-{"total":1,"items":[]}
+{"total":2,"items":[{"uid":"6e12e06fb17fec92464fd1fd24bca881","name":"登录","statistic":{"failed":0,"broken":2,"skipped":0,"passed":0,"unknown":0,"total":2}},{"uid":"855fc6acf4342bfb44097522dd08fb53","name":"商品","statistic":{"failed":0,"broken":1,"skipped":0,"passed":0,"unknown":0,"total":1}}]}
