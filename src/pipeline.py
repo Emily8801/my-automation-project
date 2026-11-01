@@ -55,6 +55,16 @@ def run():
     suitable_ids = {x["case_id"] for x in a_result
                     if x.get("verdict") in ("适合", "部分适合")}
     print(f"   ✅ 适合/部分适合：{len(suitable_ids)} 条 | ❌ 不适合：{len(cases) - len(suitable_ids)} 条")
+    # 逐条判决明细：让每条用例"为什么适合/不适合"看得见
+    print("   📝 Stage A 判决明细：")
+    for x in a_result:
+        print(f"      {x.get('case_id','?')}: {x.get('verdict','?')} "
+              f"(规则{x.get('rule','-')}) {x.get('suggestion','')}", flush=True)
+    # 判决结果存盘：审核依据 + 断点排查
+    out_mid = cfg.get("run", {}).get("output_dir", "output")
+    os.makedirs(out_mid, exist_ok=True)
+    with open(os.path.join(out_mid, "stage_a_result.json"), "w", encoding="utf-8") as f:
+        json.dump(a_result, f, ensure_ascii=False, indent=2)
 
     # ========== Stage B：技术复核 ==========
     b_cases = [c for c in cases if c["case_id"] in suitable_ids]
@@ -70,6 +80,12 @@ def run():
     todo_cases = [c for c in b_cases
                   if reviews.get(c["case_id"], {}).get("action") != "放弃自动化"]
     print(f"   ✅ 复核完成：{len(todo_cases)} 条进入生成，{len(b_cases) - len(todo_cases)} 条建议放弃")
+    print("   📝 Stage B 复核明细：")
+    for x in reviews.values():
+        print(f"      {x.get('case_id','?')}: {x.get('action','?')} "
+              f"| 风险: {x.get('risk','-')} | {x.get('solution','')}", flush=True)
+    with open(os.path.join(out_mid, "stage_b_result.json"), "w", encoding="utf-8") as f:
+        json.dump(list(reviews.values()), f, ensure_ascii=False, indent=2)
 
     # ========== Stage C：逐条生成脚本 ==========
     print("\n⚙️ Stage C：逐条生成脚本...")
@@ -89,6 +105,8 @@ def run():
             print(f"   ⚠️ {rid} 未解析出文件块，跳过")
             continue
         write_project(files, out_dir)
+        for rel in files:
+            print(f"      📄 {rel}", flush=True)
         # 收集 test_ 函数名 ↔ 用例编号映射（此时不写，避免被后续用例的 conftest.py 覆盖）
         for rel, content in files.items():
             if rel.startswith("tests/") and content:
