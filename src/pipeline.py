@@ -111,7 +111,10 @@ def run():
         # Stage D: 反例猎手自检(查 sleep/脆定位器/宽松断言/不可独立重跑), RISK=HIGH 则提醒人工介入
         code_pack = "\n\n".join(f"# FILE: {rel}\n{content}" for rel, content in files.items())
         d_resp = chat(load_prompt("stage_d_selfcheck.md") + "\n\n" + code_pack)
-        d_high = "RISK=HIGH" in d_resp
+        # 以 JSON 问题清单为准判定高危(模型常把 "RISK=HIGH" 当标题写"无高危问题", 纯字符串匹配会误报)
+        d_issues = parse_json(d_resp)
+        d_high = any(str(x.get("risk", "")).upper() == "HIGH" for x in d_issues) \
+            if d_issues else "RISK=HIGH" in d_resp and "无高危" not in d_resp
         print(f"      🕵️ Stage D 自检: {'⚠️ 发现高风险项, 建议人工复核(output/stage_d_result.md)' if d_high else '通过'}", flush=True)
         d_reports.append(f"## {rid}\n\n{d_resp}")
         # 收集 test_ 函数名 <-> 用例编号映射(此时不写, 避免被后续用例的 conftest.py 覆盖)
