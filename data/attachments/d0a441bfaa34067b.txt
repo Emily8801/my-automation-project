@@ -1,0 +1,2 @@
+DEBUG    urllib3.connectionpool:connectionpool.py:1081 Starting new HTTPS connection (1): jsonplaceholder.typicode.com:443
+DEBUG    urllib3.connectionpool:connectionpool.py:550 https://jsonplaceholder.typicode.com:443 "GET /users/1 HTTP/1.1" 200 None
