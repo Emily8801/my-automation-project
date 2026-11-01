@@ -33,13 +33,13 @@ def _html(cases, s, url):
     return f"""<div style='font-family:Segoe UI,Arial,sans-serif;max-width:760px;margin:auto'>
       <div style='background:{color};color:#fff;padding:16px 20px;border-radius:8px 8px 0 0'>
         <h2 style='margin:0'>{title}</h2>
-        <p style='margin:6px 0 0'>通过率 {s['rate']:.1f}%（通过 {s['passed']} / 共 {s['total']}）</p></div>
+        <p style='margin:6px 0 0'>通过率 {s['rate']:.1f}%(通过 {s['passed']} / 共 {s['total']})</p></div>
       <div style='border:1px solid #eee;border-top:0;padding:16px 20px;border-radius:0 0 8px 8px'>
         <p>👉 <a href='{url}'>查看完整 Allure 报告</a></p>
         <table width='100%' cellpadding='6' style='border-collapse:collapse;font-size:13px'>
           <tr style='background:#f6f8fa'><th>状态</th><th>编号</th><th>标题</th><th>结果</th><th>信息</th></tr>
           {rows}</table>
-        <p style='color:#999;font-size:12px'>本邮件由 case2auto CI 自动生成。</p></div></div>"""
+        <p style='color:#999;font-size:12px'>本邮件由 case2auto CI 自动生成. </p></div></div>"""
 def _zip(src="reports/allure-report", dst="reports/allure-report.zip"):
     if not os.path.isdir(src): return None
     with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as z:
@@ -50,12 +50,12 @@ def _zip(src="reports/allure-report", dst="reports/allure-report.zip"):
 def send_report_mail(cfg_path="config.yaml"):
     cfg = _cfg(cfg_path)
     if not cfg.get("enabled"):
-        print("邮件已关闭，跳过。"); return
+        print("邮件已关闭, 跳过. "); return
     m = cfg["smtp"]; pw = os.path.expandvars(m["password"])
     cases, s = _parse()
     if s["total"] == 0:
-        print("无测试结果，跳过。"); return
-    # 收件人路由（always 每次必发 → 成败都发）
+        print("无测试结果, 跳过. "); return
+    # 收件人路由(always 每次必发 ->  成败都发)
     rec = list(cfg["recipients"]["always"])
     if s["failed"] > 0:
         rec += cfg["recipients"].get("on_failure", [])
@@ -79,6 +79,6 @@ def send_report_mail(cfg_path="config.yaml"):
     else:
         sv = smtplib.SMTP(m["host"], m["port"]); sv.starttls(context=ssl.create_default_context())
     sv.login(m["user"], pw); sv.sendmail(m["user"], rec, msg.as_string()); sv.quit()
-    print(f"📧 已发送给 {len(rec)} 人：{rec}")
+    print(f"📧 已发送给 {len(rec)} 人: {rec}")
 if __name__ == "__main__":
     send_report_mail()
