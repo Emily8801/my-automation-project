@@ -87,9 +87,10 @@ def run():
     with open(os.path.join(out_mid, "stage_b_result.json"), "w", encoding="utf-8") as f:
         json.dump(list(reviews.values()), f, ensure_ascii=False, indent=2)
 
-    # ========== Stage C: 逐条生成脚本 ==========
+    # ========== Stage C: 逐条生成脚本 + Stage D: 生成质量自检 ==========
     print("\n⚙️ Stage C: 逐条生成脚本...")
     metas = []  # (case_id, func_name, priority, module), 循环结束后统一写入
+    d_reports = []  # Stage D 自检报告, 循环结束后统一存盘
     for i, c in enumerate(todo_cases, 1):
         rid = c["case_id"]
         print(f"   [{i}/{len(todo_cases)}] 生成 {rid} ...")
@@ -107,6 +108,12 @@ def run():
         write_project(files, out_dir)
         for rel in files:
             print(f"      📄 {rel}", flush=True)
+        # Stage D: 反例猎手自检(查 sleep/脆定位器/宽松断言/不可独立重跑), RISK=HIGH 则提醒人工介入
+        code_pack = "\n\n".join(f"# FILE: {rel}\n{content}" for rel, content in files.items())
+        d_resp = chat(load_prompt("stage_d_selfcheck.md") + "\n\n" + code_pack)
+        d_high = "RISK=HIGH" in d_resp
+        print(f"      🕵️ Stage D 自检: {'⚠️ 发现高风险项, 建议人工复核(output/stage_d_result.md)' if d_high else '通过'}", flush=True)
+        d_reports.append(f"## {rid}\n\n{d_resp}")
         # 收集 test_ 函数名 <-> 用例编号映射(此时不写, 避免被后续用例的 conftest.py 覆盖)
         for rel, content in files.items():
             if rel.startswith("tests/") and content:
@@ -119,6 +126,11 @@ def run():
     # 浏览器生命周期属于框架基础设施, 交给模型生成不可靠(曾出现 pytest.config 幻觉代码),
     # 因此由 pipeline 统一写入, 模型只允许产出 pages/ 与 tests/
     write_conftest(out_dir, metas)
+
+    # Stage D 自检报告统一存盘
+    if d_reports:
+        with open(os.path.join(out_mid, "stage_d_result.md"), "w", encoding="utf-8") as f:
+            f.write("\n\n".join(d_reports))
 
     print(f"\n✅ 全部生成完成! 产物目录: {out_dir}")
     print("📌 下一步: git add . && git commit && git push -> CI 自动跑测+出报告+发邮件")
