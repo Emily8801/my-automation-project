@@ -1,1 +1,1 @@
-[]
+[{"uid":"89eae98f30792f1","name":"登录后添加商品到购物车","time":{"start":1793608970956,"stop":1793608971148,"duration":192},"status":"passed","severity":"normal"},{"uid":"24ba9e9e3aa7f3d6","name":"错误密码登录失败提示","time":{"start":1793608970786,"stop":1793608970954,"duration":168},"status":"passed","severity":"normal"},{"uid":"52a7e81c9174bcd0","name":"正确账号密码登录成功","time":{"start":1793608969794,"stop":1793608970784,"duration":990},"status":"passed","severity":"normal"}]
