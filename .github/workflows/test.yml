@@ -10,7 +10,7 @@ on:
   workflow_dispatch:        # 允许在 GitHub 网页上手动点击触发
     inputs:
       suite:
-        description: "跑哪套用例: all=接口+生成产物, api=仅接口, generated=仅生成产物"
+        description: "跑哪套用例: all=全部, api=接口, generated=生成产物, login=cases登录UI"
         required: true
         default: "all"
         type: choice
@@ -18,6 +18,7 @@ on:
           - all
           - api
           - generated
+          - login
       test_path:
         description: "接口测试路径(文件/目录), 仅 suite 含 api 时生效"
         required: false
@@ -53,17 +54,23 @@ jobs:
       #    126 邮箱等 UI 用例不上云：网易风控会拦截数据中心 IP 的登录，只在本地跑
       #    手动触发时可填 test_path 指定其他接口用例路径; push/定时触发用默认值
       - name: Run API tests
-        # suite=generated 时跳过接口用例; push/定时触发永远跑
-        if: github.event_name != 'workflow_dispatch' || inputs.suite != 'generated'
+        # suite=generated/login 时跳过接口用例; push/定时触发永远跑
+        if: github.event_name != 'workflow_dispatch' || inputs.suite == 'api' || inputs.suite == 'all'
         run: pytest ${{ inputs.test_path || 'testcase/test_practice.py' }} -v
+
+      # 4b. 运行 cases/ 登录 UI 用例（saucedemo 是公网演示站, CI 可跑; ubuntu runner 自带 Chrome）
+      #     根目录 conftest.py 的 driver fixture 需要 --headless 显式开启无头
+      - name: Run login UI tests
+        if: github.event_name != 'workflow_dispatch' || inputs.suite == 'login' || inputs.suite == 'all'
+        run: pytest cases/test_login.py -v --headless
 
       # 5. 运行生成产物用例（output/generated_project 校准版, saucedemo 真实站点, 预期全绿）
       #    必须在 generated_project 目录内运行，保证 pages/ 包可 import、conftest.py 生效
       #    -o addopts="" 清空根 pytest.ini 默认参数（其 --alluredir 相对路径会指错位置）;
       #    注意不能加 --clean-alluredir, 否则会把第 4 步的接口用例结果清掉
       - name: Run generated tests
-        # suite=api 时跳过生成产物用例; push/定时触发永远跑
-        if: github.event_name != 'workflow_dispatch' || inputs.suite != 'api'
+        # suite=api/login 时跳过生成产物用例; push/定时触发永远跑
+        if: github.event_name != 'workflow_dispatch' || inputs.suite == 'generated' || inputs.suite == 'all'
         working-directory: output/generated_project
         run: python -m pytest tests -o addopts="" -v --tb=short --reruns 1 --reruns-delay 2 --alluredir=../../reports/allure-results
 
