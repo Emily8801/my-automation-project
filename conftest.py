@@ -6,8 +6,6 @@
 import pytest
 from selenium import webdriver
 
-from pages.login_page import LoginPage
-
 
 def pytest_addoption(parser):
     """注册 --headless 命令行参数。"""
@@ -50,6 +48,9 @@ def driver(request):
 @pytest.fixture()
 def login_page(driver):
     """注入登录页 Page Object,并保证每个用例都从登录页开始。"""
+    # 惰性导入: 避免顶层 import 缓存 pages.login_page 模块,
+    # 污染 output/generated_project 里的同名包(CI 跑生成用例时会串模块)
+    from pages.login_page import LoginPage
     page = LoginPage(driver)
     page.open()
     yield page
