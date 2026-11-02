@@ -1,5 +1,5 @@
 import unittest
-from testcase.test_login import LoginBase
+from testcase.test_coach_login import LoginBase
 from page.view_management_page import ViewManagementPage
 from page.search_ddp_page import SearchDdpPage
 from config.ddp_test_data import DDP_SEARCH_CASES

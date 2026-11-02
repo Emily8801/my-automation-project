@@ -25,7 +25,7 @@ class BasePage:
 
     def open(self, url):
         """打开指定 URL
-        - test_login 传 "/coachportal"(BASE_URL 已含 /coachportal/）→ /coachportal//coachportal
+        - test_coach_login 传 "/coachportal"(BASE_URL 已含 /coachportal/）→ /coachportal//coachportal
         现规则：完整 http(s) URL 直接打开，相对路径才与 BASE_URL 拼接。
         """
         if url.startswith(("http://", "https://")):

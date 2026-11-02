@@ -1,6 +1,6 @@
 import unittest
 from common.driver_factory import get_driver
-from page.login_page import LoginPage
+from page.login_coach_page import LoginPage
 from config.settings import BASE_URL, BROWSER, USERNAME, PASSWORD
 
 

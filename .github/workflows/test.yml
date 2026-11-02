@@ -1,6 +1,6 @@
 # GitHub Actions 工作流：推送代码后自动运行测试
 # 说明：Selenium UI 用例依赖内网 UAT 环境，云端 runner 访问不到，
-#       所以 CI 里只跑不依赖内网的接口用例（test_practice.py）
+#       所以 CI 里只跑不依赖内网的接口用例（test_api.py）
 name: API Tests
 
 # ========== 触发时机 ==========
@@ -22,7 +22,7 @@ on:
       test_path:
         description: "接口测试路径(文件/目录), 仅 suite 含 api 时生效"
         required: false
-        default: "testcase/test_practice.py"
+        default: "testcase/test_api.py"
         type: string
   schedule:
     - cron: "0 1 * * *"     # 每天定时跑（cron 是 UTC 时间，0 1 * * * = 北京时间 09:00）
@@ -56,7 +56,7 @@ jobs:
       - name: Run API tests
         # suite=generated/login 时跳过接口用例; push/定时触发永远跑
         if: github.event_name != 'workflow_dispatch' || inputs.suite == 'api' || inputs.suite == 'all'
-        run: pytest ${{ inputs.test_path || 'testcase/test_practice.py' }} -v
+        run: pytest ${{ inputs.test_path || 'testcase/test_api.py' }} -v
 
       # 4b. 运行 cases/ 登录 UI 用例（saucedemo 是公网演示站, CI 可跑; ubuntu runner 自带 Chrome）
       #     根目录 conftest.py 的 driver fixture 需要 --headless 显式开启无头

@@ -1,6 +1,6 @@
 import unittest
 from page.view_management_page import ViewManagementPage
-from testcase.test_login import LoginBase
+from testcase.test_coach_login import LoginBase
 
 
 class TestViewManagement(LoginBase):

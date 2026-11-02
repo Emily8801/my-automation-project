@@ -1,6 +1,6 @@
 import unittest
 from page.masters_page import MastersPage
-from testcase.test_login import LoginBase
+from testcase.test_coach_login import LoginBase
 
 
 class EnterPMBase(LoginBase):
