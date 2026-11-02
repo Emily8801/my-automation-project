@@ -65,8 +65,8 @@ def send_report_mail(cfg_path="config.yaml", dry_run=False):
     rec = list(dict.fromkeys(rec))
     ok = s["failed"] == 0
     msg = MIMEMultipart("related")
-    msg["Subject"] = Header(f"[AutoTest] {'✅通过' if ok else '❌失败'} 通过率{s['rate']:.0f}%", "utf-8")
-    msg["From"] = formataddr(("自动化测试助手", m["user"]))
+    msg["Subject"] = Header(f"[AutoTest] {'✅ PASSED' if ok else '❌ FAILED'} | Pass Rate {s['rate']:.0f}%", "utf-8")
+    msg["From"] = formataddr(("AutoTest Bot", m["user"]))
     msg["To"] = ", ".join(rec)
     msg.attach(MIMEText(_html(cases, s, cfg["pages_url"]), "html", "utf-8"))
     if cfg.get("attach_report"):
