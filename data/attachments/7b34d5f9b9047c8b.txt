@@ -1,0 +1,4 @@
+DEBUG    selenium.webdriver.remote.remote_connection:remote_connection.py:434 POST http://localhost:60443/session/fa0500647f580155a6c7cafc020850a2/url {'url': 'https://www.saucedemo.com/'}
+DEBUG    urllib3.connectionpool:connectionpool.py:550 http://localhost:60443 "POST /session/fa0500647f580155a6c7cafc020850a2/url HTTP/1.1" 200 0
+DEBUG    selenium.webdriver.remote.remote_connection:remote_connection.py:467 Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+DEBUG    selenium.webdriver.remote.remote_connection:remote_connection.py:496 Finished Request
