@@ -50,6 +50,6 @@ def driver(request):
 @pytest.fixture()
 def login_page(driver):
     """注入登录页 Page Object，并保证每个用例都从登录页开始。"""
-    page = LoginPage(driver, timeout=20)
+    page = LoginPage(driver)
     page.open()
     yield page
