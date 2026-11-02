@@ -7,6 +7,22 @@ import pytest
 from selenium import webdriver
 
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_call(item):
+    """用例执行阶段的非断言异常统一转成 AssertionError。
+
+    Allure 状态规则: 断言失败 -> failed; 其他异常(如 TimeoutException) -> failed。
+    项目约定: 用例执行失败一律记为 failed, 报告里不再出现 broken。
+    (fixture setup/teardown 阶段的异常不在此范围, 仍记为 broken)
+    """
+    try:
+        item.runtest()
+    except AssertionError:
+        raise
+    except Exception as e:
+        raise AssertionError(f"{type(e).__name__}: {e}") from e
+
+
 def pytest_addoption(parser):
     """注册 --headless 命令行参数。"""
     parser.addoption(
