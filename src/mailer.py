@@ -47,7 +47,8 @@ def _zip(src="reports/allure-report", dst="reports/allure-report.zip"):
             for fn in fs:
                 p = os.path.join(r, fn); z.write(p, os.path.relpath(p, src))
     return dst
-def send_report_mail(cfg_path="config.yaml"):
+def send_report_mail(cfg_path="config.yaml", dry_run=False):
+    """发送测试报告邮件。dry_run=True 时只打印预览不实际发送(本地调试 SMTP 用)。"""
     cfg = _cfg(cfg_path)
     if not cfg.get("enabled"):
         print("邮件已关闭, 跳过. "); return
@@ -74,6 +75,13 @@ def send_report_mail(cfg_path="config.yaml"):
             part = MIMEApplication(open(zp, "rb").read(), Name="allure-report.zip")
             part["Content-Disposition"] = 'attachment; filename="allure-report.zip"'
             msg.attach(part)
+    if dry_run:
+        print(f"[DRY-RUN] 主题: {msg['Subject']}")
+        print(f"[DRY-RUN] 发件人: {msg['From']}  收件人({len(rec)}): {rec}")
+        print(f"[DRY-RUN] 统计: 共{s['total']}条 通过{s['passed']} 失败{s['failed']} 通过率{s['rate']:.0f}%")
+        print(f"[DRY-RUN] 附件: {'allure-report.zip' if cfg.get('attach_report') else '无'}")
+        print("[DRY-RUN] 未实际发送")
+        return
     if m.get("ssl") or m["port"] == 465:
         sv = smtplib.SMTP_SSL(m["host"], m["port"], context=ssl.create_default_context())
     else:
@@ -81,4 +89,5 @@ def send_report_mail(cfg_path="config.yaml"):
     sv.login(m["user"], pw); sv.sendmail(m["user"], rec, msg.as_string()); sv.quit()
     print(f"📧 已发送给 {len(rec)} 人: {rec}")
 if __name__ == "__main__":
-    send_report_mail()
+    import sys
+    send_report_mail(dry_run="--dry-run" in sys.argv)
