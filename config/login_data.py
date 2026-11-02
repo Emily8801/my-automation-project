@@ -1,7 +1,7 @@
 # config/login_data.py
 # Swag Labs 登录场景测试数据（公开演示站账号，非敏感）
 
-DDP_LOGIN_CASES = [
+LOGIN_CASES = [
     {
         "username": "standard_user",
         "password": "secret_sauce",
@@ -34,4 +34,4 @@ DDP_LOGIN_CASES = [
     },
 ]
 
-DDP_LOGIN_IDS = ["正常登录", "被锁定账号", "错误账号密码", "用户名为空", "密码为空"]
+LOGIN_IDS = ["正常登录", "被锁定账号", "错误账号密码", "用户名为空", "密码为空"]

@@ -51,7 +51,7 @@ def send_report_mail(cfg_path="config.yaml"):
     cfg = _cfg(cfg_path)
     if not cfg.get("enabled"):
         print("邮件已关闭, 跳过. "); return
-    m = cfg["smtp"]; pw = os.path.expandvars(m["password"])
+    m = cfg["smtp"]; pw = os.getenv("MAIL_SMTP_AUTH_CODE", "")  # 126 客户端授权码(Windows 下 expandvars 不认 ${VAR}, 直接读环境变量)
     cases, s = _parse()
     if s["total"] == 0:
         print("无测试结果, 跳过. "); return

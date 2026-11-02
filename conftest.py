@@ -1,6 +1,6 @@
-"""全局 fixture：Chrome driver 的创建与销毁 + 登录页 Page Object 注入。
+"""全局 fixture:Chrome driver 的创建与销毁 + 登录页 Page Object 注入。
 
-支持无头模式：pytest --headless
+支持无头模式:pytest --headless
 """
 
 import pytest
@@ -15,13 +15,13 @@ def pytest_addoption(parser):
         "--headless",
         action="store_true",
         default=False,
-        help="以无头模式运行 Chrome（无显示器 / CI 环境建议开启）",
+        help="以无头模式运行 Chrome(无显示器 / CI 环境建议开启）",
     )
 
 
 @pytest.fixture()
 def driver(request):
-    """创建 Chrome driver，用例结束后无条件 driver.quit() 释放进程。"""
+    """创建 Chrome driver,用例结束后无条件 driver.quit() 释放进程。"""
     options = webdriver.ChromeOptions()
     # 容器 / CI 环境下的常规启动参数，本地同样适用
     for arg in ("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage"):
@@ -49,7 +49,7 @@ def driver(request):
 
 @pytest.fixture()
 def login_page(driver):
-    """注入登录页 Page Object，并保证每个用例都从登录页开始。"""
+    """注入登录页 Page Object,并保证每个用例都从登录页开始。"""
     page = LoginPage(driver)
     page.open()
     yield page

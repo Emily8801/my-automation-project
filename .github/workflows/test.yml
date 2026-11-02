@@ -112,5 +112,5 @@ jobs:
       - name: Send result email
         if: always()
         env:
-          SMTP_AUTH_CODE: ${{ secrets.SMTP_AUTH_CODE }}
+          MAIL_SMTP_AUTH_CODE: ${{ secrets.MAIL_SMTP_AUTH_CODE }}
         run: python src/mailer.py

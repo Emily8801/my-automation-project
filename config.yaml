@@ -31,10 +31,10 @@ selenium:
 mail:
   enabled: true
   smtp:
-    host: "smtp.qq.com"              # QQ: smtp.qq.com:465 / 163: smtp.163.com:465 / Gmail: smtp.gmail.com:587
+    host: "smtp.126.com"             # 126: smtp.126.com:465 / QQ: smtp.qq.com:465 / 163: smtp.163.com:465 / Gmail: smtp.gmail.com:587
     port: 465
-    user: "395725813@qq.com"
-    password: "${SMTP_AUTH_CODE}"    # 授权码，不是登录密码！见 README 第六节
+    user: "Emily8801@126.com"
+    password: "${MAIL_SMTP_AUTH_CODE}"  # 126 客户端授权码，不是网页登录密码！
     ssl: true                        # 465 用 SSL；587 用 STARTTLS
   # 收件人路由：每次都发 always；失败额外加发。若不想分级，只保留 always 即可
   recipients:
