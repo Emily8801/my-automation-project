@@ -1,7 +1,0 @@
-"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"broken","Mon Nov 02 08:17:52 UTC 2026","Mon Nov 02 08:17:53 UTC 2026","26","output.generated_project.tests","test_shopping_cart_TC003","","","","登录后添加商品到购物车","
-测试登录后添加商品到购物车
-用例编号: TC-003
-"
-"broken","Mon Nov 02 08:17:50 UTC 2026","Mon Nov 02 08:17:50 UTC 2026","51","output.generated_project.tests","test_login_TC002","","","","错误密码登录失败提示",""
-"broken","Mon Nov 02 08:17:48 UTC 2026","Mon Nov 02 08:17:48 UTC 2026","49","output.generated_project.tests","test_login_TC001","","","","正确账号密码登录成功",""
