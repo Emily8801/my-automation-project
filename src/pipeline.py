@@ -100,6 +100,17 @@ def run():
             + "\n\n[阶段B已确认的技术方案/定位建议]\n"
             + json.dumps(reviews.get(rid, {}), ensure_ascii=False)
         )
+        # 注入已存在的页面对象: 共享 page 文件被多条用例逐条覆盖生成,
+        # 模型看不到前序版本就会只写本条用到的方法, 导致既有方法丢失(TC-101 教训)
+        pages_dir = os.path.join(out_dir, "pages")
+        if os.path.isdir(pages_dir):
+            existing = []
+            for fn in sorted(os.listdir(pages_dir)):
+                if fn.endswith(".py") and not fn.startswith("__"):
+                    with open(os.path.join(pages_dir, fn), encoding="utf-8") as f:
+                        existing.append(f"# FILE: pages/{fn}\n{f.read()}")
+            if existing:
+                prompt += "\n\n[已存在的页面对象]\n" + "\n\n".join(existing)
         raw = chat(prompt)
         files = split_files(raw)
         if not files:
