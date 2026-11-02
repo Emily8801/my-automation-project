@@ -1,6 +1,13 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Nov 02 10:49:06 UTC 2026","Mon Nov 02 10:49:06 UTC 2026","216","cases","test_login","","","","empty_password","通过 fixture 获取参数化数据，进行登录测试"
-"passed","Mon Nov 02 10:49:05 UTC 2026","Mon Nov 02 10:49:06 UTC 2026","218","cases","test_login","","","","empty_username","通过 fixture 获取参数化数据，进行登录测试"
-"passed","Mon Nov 02 10:49:03 UTC 2026","Mon Nov 02 10:49:03 UTC 2026","687","cases","test_login","","","","valid_login","通过 fixture 获取参数化数据，进行登录测试"
-"passed","Mon Nov 02 10:49:04 UTC 2026","Mon Nov 02 10:49:04 UTC 2026","229","cases","test_login","","","","locked_out_user","通过 fixture 获取参数化数据，进行登录测试"
-"passed","Mon Nov 02 10:49:05 UTC 2026","Mon Nov 02 10:49:05 UTC 2026","229","cases","test_login","","","","invalid_credentials","通过 fixture 获取参数化数据，进行登录测试"
+"passed","Mon Nov 02 10:55:47 UTC 2026","Mon Nov 02 10:55:47 UTC 2026","240","cases","test_login","","","","empty_password","通过 fixture 获取参数化数据，进行登录测试"
+"passed","Mon Nov 02 10:55:44 UTC 2026","Mon Nov 02 10:55:44 UTC 2026","300","cases","test_login","","","","valid_login","通过 fixture 获取参数化数据，进行登录测试"
+"passed","Mon Nov 02 10:55:48 UTC 2026","Mon Nov 02 10:55:49 UTC 2026","451","output.generated_project.tests","test_login_TC001","","","","正确账号密码登录成功",""
+"broken","Mon Nov 02 10:56:01 UTC 2026","Mon Nov 02 10:56:11 UTC 2026","10311","output.generated_project.tests","test_login_TC002","","","","错误密码登录失败提示",""
+"passed","Mon Nov 02 10:55:45 UTC 2026","Mon Nov 02 10:55:46 UTC 2026","241","cases","test_login","","","","invalid_credentials","通过 fixture 获取参数化数据，进行登录测试"
+"passed","Mon Nov 02 10:55:46 UTC 2026","Mon Nov 02 10:55:46 UTC 2026","233","cases","test_login","","","","empty_username","通过 fixture 获取参数化数据，进行登录测试"
+"passed","Mon Nov 02 10:55:45 UTC 2026","Mon Nov 02 10:55:45 UTC 2026","249","cases","test_login","","","","locked_out_user","通过 fixture 获取参数化数据，进行登录测试"
+"broken","Mon Nov 02 10:56:23 UTC 2026","Mon Nov 02 10:56:34 UTC 2026","10193","output.generated_project.tests","test_shopping_cart_TC003","","","","登录后添加商品到购物车","
+测试登录后添加商品到购物车
+用例编号: TC-003
+"
+"passed","Mon Nov 02 10:55:41 UTC 2026","Mon Nov 02 10:55:41 UTC 2026","112","testcase","test_practice","","","","test_user_detail","查询用户详情接口，校验状态码和返回字段"
