@@ -1,7 +1,7 @@
-# GitHub Actions 工作流：推送代码后自动运行接口测试
+# GitHub Actions 工作流：推送代码后自动运行测试
 # 说明：Selenium UI 用例依赖内网 UAT 环境，云端 runner 访问不到，
 #       所以 CI 里只跑不依赖内网的接口用例（test_practice.py）
-name: Automation Tests
+name: API Tests
 
 # ========== 触发时机 ==========
 on:
@@ -10,15 +10,16 @@ on:
   workflow_dispatch:        # 允许在 GitHub 网页上手动点击触发
     inputs:
       test_path:
-        description: "要运行的测试路径(文件/目录), 留空则用默认接口用例"
+        description: "接口测试路径(文件/目录), 留空则用默认接口用例"
         required: false
         default: "testcase/test_practice.py"
         type: string
   schedule:
     - cron: "0 1 * * *"     # 每天定时跑（cron 是 UTC 时间，0 1 * * * = 北京时间 09:00）
-                            # 其他例子：0 10 * * 1-5 = 周一~周五北京时间 18:00；0 */4 * * * = 每 4 小时
 
 jobs:
+  # 合并为单个 job: 接口用例 + 生成产物用例顺序执行, 结果汇入同一份 Allure 报告,
+  # 一次部署 gh-pages、一次发邮件, 保证邮件正文/附件/线上报告三者一致。
   test:
     runs-on: ubuntu-latest
     permissions:
@@ -33,69 +34,26 @@ jobs:
         with:
           python-version: "3.14"
 
-      # 3. 安装依赖（pytest-rerunfailures/allure-pytest 是 pytest.ini 里 addopts 必需的）
-      - name: Install dependencies
-        run: pip install requests pytest pytest-rerunfailures allure-pytest python-dotenv
-
-      # 4. 运行接口测试用例（pytest.ini 自动带 --alluredir=reports/allure-results）
-      #    126 邮箱等 UI 用例不上云：网易风控会拦截数据中心 IP 的登录，只在本地跑
-      #    手动触发时可填 test_path 指定其他路径; push/定时触发用默认值
-      - name: Run API tests
-        run: pytest ${{ inputs.test_path || 'testcase/test_practice.py' }} -v
-
-      # 5. 安装 Allure 命令行（ubuntu runner 自带 Java）
-      - name: Install Allure commandline
-        if: always()
-        run: |
-          wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
-          sudo tar -zxf allure-2.29.0.tgz -C /opt/
-          sudo ln -sf /opt/allure-2.29.0/bin/allure /usr/bin/allure
-
-      # 6. 生成 Allure HTML 报告（无论用例成败都生成）
-      - name: Generate Allure report
-        if: always()
-        run: allure generate reports/allure-results -o reports/allure-report --clean
-
-      # 7. 部署到 gh-pages 分支（需先在仓库 Settings → Pages → Source 选 gh-pages 分支）
-      - name: Deploy Allure report to Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports/allure-report
-
-  # ============================================================
-  # case2auto 生成产物验证 job —— 仅限手动触发（Actions 页面点 Run workflow）
-  # 架构约定：AI 生成在本地进行（python src/pipeline.py），人工校准后提交
-  # output/generated_project/；CI 只跑"已提交的校准版"，不在云端现场抽卡，
-  # 否则模型每次输出有差异，结果不可复现。
-  # 前提：仓库 Settings → Secrets 里配好 SMTP_AUTH_CODE（发邮件用）
-  # ============================================================
-  generate:
-    if: github.event_name == 'workflow_dispatch'   # 仅手动触发
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write   # 部署 gh-pages 需要
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
+      # 3. 安装全部依赖（requirements.txt 覆盖接口+生成产物用例所需;
+      #    pytest-rerunfailures/allure-pytest 是 pytest.ini 里 addopts 必需的）
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 跑本地校准后提交的生成用例（saucedemo 真实站点，预期全绿）。
-      # 必须在 generated_project 目录内用 python -m pytest 运行，
-      # 保证 pages/ 包可被 import，且 conftest.py 的 driver fixture 生效（CI 环境自动无头）
+      # 4. 运行接口测试用例（pytest.ini 自动带 --alluredir=reports/allure-results）
+      #    126 邮箱等 UI 用例不上云：网易风控会拦截数据中心 IP 的登录，只在本地跑
+      #    手动触发时可填 test_path 指定其他接口用例路径; push/定时触发用默认值
+      - name: Run API tests
+        run: pytest ${{ inputs.test_path || 'testcase/test_practice.py' }} -v
+
+      # 5. 运行生成产物用例（output/generated_project 校准版, saucedemo 真实站点, 预期全绿）
+      #    必须在 generated_project 目录内运行，保证 pages/ 包可 import、conftest.py 生效
+      #    -o addopts="" 清空根 pytest.ini 默认参数（其 --alluredir 相对路径会指错位置）;
+      #    注意不能加 --clean-alluredir, 否则会把第 4 步的接口用例结果清掉
       - name: Run generated tests
         working-directory: output/generated_project
-        # -o addopts="" 清空根目录 pytest.ini 的默认参数（其 --alluredir 相对路径会指错位置），
-        # 这里显式重声明所需参数，确保 Allure 结果落到仓库根 reports/
-        run: python -m pytest tests -o addopts="" -v --tb=short --reruns 1 --reruns-delay 2 --alluredir=../../reports/allure-results --clean-alluredir
+        run: python -m pytest tests -o addopts="" -v --tb=short --reruns 1 --reruns-delay 2 --alluredir=../../reports/allure-results
 
-      # 生成 Allure HTML 报告
+      # 6. 安装 Allure 命令行（ubuntu runner 自带 Java）
       - name: Install Allure commandline
         if: always()
         run: |
@@ -103,11 +61,12 @@ jobs:
           sudo tar -zxf allure-2.29.0.tgz -C /opt/
           sudo ln -sf /opt/allure-2.29.0/bin/allure /usr/bin/allure
 
+      # 7. 生成 Allure HTML 报告（接口+生成产物用例合并后的完整结果）
       - name: Generate Allure report
         if: always()
         run: allure generate reports/allure-results -o reports/allure-report --clean
 
-      # 部署 Allure 在线报告到 gh-pages 分支（与 test job 同一套方式）
+      # 8. 部署到 gh-pages 分支（需先在仓库 Settings → Pages → Source 选 gh-pages 分支）
       - name: Deploy Allure report to Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v3
@@ -115,7 +74,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: reports/allure-report
 
-      # 无论成败都发结果邮件
+      # 9. 无论成败都发结果邮件（与线上报告同源, 内容必然一致）
       - name: Send result email
         if: always()
         env:
