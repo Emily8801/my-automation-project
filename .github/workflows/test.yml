@@ -9,13 +9,23 @@ on:
     branches: [main]        # 推送到 main 分支时触发
   workflow_dispatch:        # 允许在 GitHub 网页上手动点击触发
     inputs:
+      suite:
+        description: "跑哪套用例: all=接口+生成产物, api=仅接口, generated=仅生成产物"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - api
+          - generated
       test_path:
-        description: "接口测试路径(文件/目录), 留空则用默认接口用例"
+        description: "接口测试路径(文件/目录), 仅 suite 含 api 时生效"
         required: false
         default: "testcase/test_practice.py"
         type: string
   schedule:
     - cron: "0 1 * * *"     # 每天定时跑（cron 是 UTC 时间，0 1 * * * = 北京时间 09:00）
+                            # 其他例子：0 10 * * 1-5 = 周一~周五北京时间 18:00；0 */4 * * * = 每 4 小时
 
 jobs:
   # 合并为单个 job: 接口用例 + 生成产物用例顺序执行, 结果汇入同一份 Allure 报告,
@@ -43,6 +53,8 @@ jobs:
       #    126 邮箱等 UI 用例不上云：网易风控会拦截数据中心 IP 的登录，只在本地跑
       #    手动触发时可填 test_path 指定其他接口用例路径; push/定时触发用默认值
       - name: Run API tests
+        # suite=generated 时跳过接口用例; push/定时触发永远跑
+        if: github.event_name != 'workflow_dispatch' || inputs.suite != 'generated'
         run: pytest ${{ inputs.test_path || 'testcase/test_practice.py' }} -v
 
       # 5. 运行生成产物用例（output/generated_project 校准版, saucedemo 真实站点, 预期全绿）
@@ -50,6 +62,8 @@ jobs:
       #    -o addopts="" 清空根 pytest.ini 默认参数（其 --alluredir 相对路径会指错位置）;
       #    注意不能加 --clean-alluredir, 否则会把第 4 步的接口用例结果清掉
       - name: Run generated tests
+        # suite=api 时跳过生成产物用例; push/定时触发永远跑
+        if: github.event_name != 'workflow_dispatch' || inputs.suite != 'api'
         working-directory: output/generated_project
         run: python -m pytest tests -o addopts="" -v --tb=short --reruns 1 --reruns-delay 2 --alluredir=../../reports/allure-results
 
