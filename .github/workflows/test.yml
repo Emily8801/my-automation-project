@@ -62,7 +62,9 @@ jobs:
       #     根目录 conftest.py 的 driver fixture 需要 --headless 显式开启无头
       - name: Run login UI tests
         if: github.event_name != 'workflow_dispatch' || inputs.suite == 'login' || inputs.suite == 'all'
-        run: pytest cases/test_login.py -v --headless
+        # -o addopts 覆盖 pytest.ini 默认参数: 去掉 --clean-alluredir,
+        # 否则会把前面接口用例已写入的 allure-results 清掉, 导致报告/邮件数据不一致
+        run: pytest cases/test_login.py -v --headless -o addopts="--alluredir=reports/allure-results"
 
       # 5. 运行生成产物用例（output/generated_project 校准版, saucedemo 真实站点, 预期全绿）
       #    必须在 generated_project 目录内运行，保证 pages/ 包可 import、conftest.py 生效
