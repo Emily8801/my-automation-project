@@ -1,8 +1,8 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Mon Nov 02 09:35:03 UTC 2026","Mon Nov 02 09:35:03 UTC 2026","115","testcase","test_practice","","","","test_user_detail","查询用户详情接口，校验状态码和返回字段"
-"passed","Mon Nov 02 09:35:06 UTC 2026","Mon Nov 02 09:35:06 UTC 2026","191","output.generated_project.tests","test_login_TC002","","","","错误密码登录失败提示",""
-"passed","Mon Nov 02 09:35:06 UTC 2026","Mon Nov 02 09:35:06 UTC 2026","229","output.generated_project.tests","test_shopping_cart_TC003","","","","登录后添加商品到购物车","
+"broken","Mon Nov 02 09:43:04 UTC 2026","Mon Nov 02 09:43:14 UTC 2026","10290","output.generated_project.tests","test_login_TC002","","","","错误密码登录失败提示",""
+"passed","Mon Nov 02 09:42:40 UTC 2026","Mon Nov 02 09:42:40 UTC 2026","76","testcase","test_practice","","","","test_user_detail","查询用户详情接口，校验状态码和返回字段"
+"broken","Mon Nov 02 09:43:26 UTC 2026","Mon Nov 02 09:43:36 UTC 2026","10216","output.generated_project.tests","test_shopping_cart_TC003","","","","登录后添加商品到购物车","
 测试登录后添加商品到购物车
 用例编号: TC-003
 "
-"passed","Mon Nov 02 09:35:05 UTC 2026","Mon Nov 02 09:35:06 UTC 2026","777","output.generated_project.tests","test_login_TC001","","","","正确账号密码登录成功",""
+"passed","Mon Nov 02 09:42:50 UTC 2026","Mon Nov 02 09:42:51 UTC 2026","1221","output.generated_project.tests","test_login_TC001","","","","正确账号密码登录成功",""
