@@ -55,12 +55,3 @@ def pytest_runtest_makereport(item, call):
         # 截图失败不能影响测试结果的收集
         logger.error(f"❌ 失败截图保存失败: {e}")
 
-
-# 🟠 说明：旧版"会话结束发纯文本邮件"的 pytest_sessionfinish 钩子已删除，
-#    结果邮件统一由 src/mailer.py（AutoTest 同款 HTML 报告）发送，见 bin/run_test.py。
-
-
-# 🟠 结构说明：原文件中的 session 级 driver fixture 和 login fixture 已删除。
-#    当前所有用例均为 unittest.TestCase，driver 由各类 setUp 自建、登录由 LoginBase 完成，
-#    这两个 fixture 没有任何用例使用，属于死代码；保留会让"两套驱动/登录机制"并存。
-#    若后续改成 pytest 风格用例，可在使用处重新引入对应 fixture。

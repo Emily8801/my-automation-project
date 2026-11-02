@@ -40,35 +40,6 @@ def parse_json(text: str) -> list[dict]:
     return json.loads(m.group(0)) if m else []
 
 
-VERDICT_COL = "stage_a_verdict"    # Stage A 判决写回列: 判决(规则)+建议
-APPROVAL_COL = "approve_generate"  # 人工放行列: 填"是"才进入生成
-
-
-def write_verdicts_to_csv(csv_path: str, a_result: list[dict]):
-    """把 Stage A 判决写回用例台账, 供人工审核后圈定生成范围"""
-    with open(csv_path, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f))
-    if not rows:
-        return
-    fields = list(rows[0].keys())
-    for col in (VERDICT_COL, APPROVAL_COL):
-        if col not in fields:
-            fields.append(col)
-    verdicts = {x["case_id"]: x for x in a_result}
-    for r in rows:
-        v = verdicts.get(r.get("case_id", ""))
-        if v:
-            text = f"{v.get('verdict', '?')}({v.get('rule', '-')})"
-            if v.get("suggestion"):
-                text += f" {v['suggestion']}"
-            r[VERDICT_COL] = text
-        r.setdefault(APPROVAL_COL, "")
-    with open(csv_path, "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
-        w.writeheader()
-        w.writerows(rows)
-
-
 def run():
     cfg = yaml.safe_load(open("config.yaml", encoding="utf-8"))
     out_dir = cfg["paths"]["output"]
@@ -94,23 +65,6 @@ def run():
     os.makedirs(out_mid, exist_ok=True)
     with open(os.path.join(out_mid, "stage_a_result.json"), "w", encoding="utf-8") as f:
         json.dump(a_result, f, ensure_ascii=False, indent=2)
-
-    # 判决写回台账: 每条用例"合适/不合适+理由"人工可见
-    write_verdicts_to_csv(cfg["paths"]["inputs"], a_result)
-
-    # human_gate: 仅人工在 approve_generate 列标"是"的用例才进入 Stage B/C/D
-    if cfg.get("run", {}).get("human_gate"):
-        approved = {c["case_id"] for c in load_cases()
-                    if c.get(APPROVAL_COL, "").strip() == "是"}
-        pending = suitable_ids - approved
-        if pending:
-            print(f"   ⏸️ 人工门禁: {len(pending)} 条判决通过但未放行, 跳过 "
-                  f"({', '.join(sorted(pending))})")
-        suitable_ids &= approved
-        if not suitable_ids:
-            print("⏸️ 判决已写回 inputs/cases.csv. 请审核 stage_a_verdict 列, "
-                  "对要生成的用例在 approve_generate 列填'是', 然后重跑 pipeline")
-            return
 
     # ========== Stage B: 技术复核 ==========
     b_cases = [c for c in cases if c["case_id"] in suitable_ids]
