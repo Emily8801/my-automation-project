@@ -1,8 +1,12 @@
+import allure
 import pytest
 
 
-def test_login(login_page, login_test_data):
+def test_login(login_page, login_test_data, request):
     """通过 fixture 获取参数化数据，进行登录测试"""
+
+    # Allure 报告里的用例名显示为中文场景名(如"正常登录"), 而非 test_login[...] 参数ID
+    allure.dynamic.title(request.node.callspec.id)
 
     username = login_test_data["username"]
     password = login_test_data["password"]

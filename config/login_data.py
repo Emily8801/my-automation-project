@@ -34,4 +34,4 @@ LOGIN_CASES = [
     },
 ]
 
-LOGIN_IDS = ["正常登录", "被锁定账号", "错误账号密码", "用户名为空", "密码为空"]
+LOGIN_IDS = ["valid_login", "locked_out_user", "invalid_credentials", "empty_username", "empty_password"]
